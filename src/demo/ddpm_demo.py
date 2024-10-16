@@ -102,8 +102,5 @@ trainer = L.Trainer(
     callbacks=[checkpoint_callback,],
 )
 
-breakpoint()
-
 trainer.fit(model, data)
-
 
