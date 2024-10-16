@@ -8,7 +8,7 @@ class DiffusionModel(L.LightningModule):
     def __init__(self, opts):
         super().__init__()
         self.model = diffusers.models.UNet2DModel(
-            sample_size=32,
+            sample_size=64,
             in_channels=1,
             out_channels=1,
             block_out_channels=[64, 128, 256, 512],

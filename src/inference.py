@@ -43,8 +43,10 @@ if __name__ == "__main__":
     
     if args.use_ddim:
         scheduler = DDIMScheduler() # eta = 1 means a DDPM type
-        pipeline = DDIMPipeline(pipeline.unet, scheduler)
-        
+        unet = pipeline.unet
+        unet.sample_size = 64
+        unet.config.sample_size = 64
+        pipeline = DDIMPipeline(unet, scheduler)
     print("Pipeline loaded successfully.")
     for i in range(0, args.total_size, args.batch_size):
         if args.use_ddim:
