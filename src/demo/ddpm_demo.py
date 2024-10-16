@@ -86,7 +86,7 @@ wandblogger = WandbLogger(
 checkpoint_callback = ModelCheckpoint(
     save_top_k=1, save_last=True,
     dirpath=os.path.join(opts.ckpt_dir, o_d),
-    monitor="val_loss", mode="min"
+    monitor="train_loss", mode="min"
 )
 
 
