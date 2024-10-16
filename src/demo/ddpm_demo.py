@@ -77,6 +77,8 @@ class DiffusionData(L.LightningDataModule):
 data = DiffusionData(opts.img_root, opts)
 model = DiffusionModel(opts)
 
+breakpoint()
+
 wandblogger = WandbLogger(
     name=f"{o_d}_{thisfile}_{opts.ps}", 
     save_dir=opts.log_dir,
