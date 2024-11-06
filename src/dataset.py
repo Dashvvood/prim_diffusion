@@ -3,13 +3,12 @@ import re
 from dataclasses import dataclass, replace
 from typing import List
 
+import h5py
 import nibabel as nib
 import numpy as np
+import pandas as pd
 import torch
 from torch.utils.data import Dataset
-
-import h5py
-import pandas as pd
 
 class QuadraACDCDataset(Dataset):
     def __init__(self, root_dir, h5data="acdc_quadra.h5", metadata="quadra_per_slice.csv", transform=None):
@@ -33,6 +32,12 @@ class QuadraACDCDataset(Dataset):
         slice = self.data[slice_path][:]
         
         return slice, row
+    
+    @staticmethod
+    def collate_fn(batch):
+        data = torch.stack([x[0] for x in batch])
+        meta = pd.concat([x[1] for x in batch], axis=1).T
+        return data, meta
     
 class VanillaDataset(Dataset):
     def __init__(self):

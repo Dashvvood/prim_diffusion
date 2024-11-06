@@ -15,12 +15,13 @@ import os
 from torch.utils.data import Dataset, DataLoader
 
 import numpy as np
-
+import pandas as pd
 from args import opts
 from model.DDPM import DiffusionModel
 from dataset import QuadraACDCDataset
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.callbacks import Callback, ModelCheckpoint
+
 
 
 class DiffusionData(L.LightningDataModule):
@@ -41,6 +42,7 @@ class DiffusionData(L.LightningDataModule):
             shuffle=True,
             batch_size=opts.batch_size,
             num_workers=opts.num_workers,
+            collate_fn=QuadraACDCDataset.collate_fn,
         )
 
 
