@@ -31,6 +31,7 @@ class DiffusionData(L.LightningDataModule):
             data_dir,
             transform= transforms.Compose([
                 transforms.ToTensor(),
+                transforms.Resize((opts.img_size, opts.img_size)),
             ])
         )
         
@@ -46,7 +47,6 @@ class DiffusionData(L.LightningDataModule):
 data = DiffusionData(opts.data_root, opts)
 model = DiffusionModel(opts)
 
-breakpoint()
 
 wandblogger = WandbLogger(
     name=f"{o_d}_{thisfile}_{opts.ps}", 
