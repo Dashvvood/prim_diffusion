@@ -10,6 +10,8 @@ parser.add_argument("--max_epochs", type=int, default=1, help="Maximum number of
 parser.add_argument("--from_epoch", type=int, default=0, help="Starting epoch")
 parser.add_argument("--num_workers", type=int, default=16, help="Number of data loading workers")
 parser.add_argument("--device_num", type=int, default=1, help="Device number to use (GPU/TPU)")
+parser.add_argument("--unet_config", type=str, default=".", help="unet config json")
+parser.add_argument("--scheduler_config", type=str, default=".", help="scheduler config json")
 
 # Data and Input Parameters
 parser.add_argument("--img_size", type=int, default=28, help="Size of input images")

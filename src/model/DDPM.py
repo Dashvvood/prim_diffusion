@@ -5,8 +5,10 @@ import lightning as L
 from utils.cos_warmup_scheduler import get_cosine_schedule_with_warmup
 
 class DiffusionModel(L.LightningModule):
-    def __init__(self, opts):
+    def __init__(self, opts=None):
         super().__init__()
+        self.save_hyperparameters()
+        
         self.model = diffusers.models.UNet2DModel(
             sample_size=opts.img_size,
             in_channels=opts.in_channels,
