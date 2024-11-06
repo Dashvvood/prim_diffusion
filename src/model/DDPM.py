@@ -17,7 +17,7 @@ class DiffusionModel(L.LightningModule):
         self.opts = opts
         
     def training_step(self, batch, batch_idx):
-        images = batch
+        images = batch[0]
         noise = torch.randn_like(images)
         steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device)
         noisy_images = self.scheduler.add_noise(images, noise, steps)
