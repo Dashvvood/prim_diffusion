@@ -13,57 +13,26 @@ from torchvision import transforms
 import lightning as L
 import os
 from torch.utils.data import Dataset, DataLoader
-import imageio.v2 as imageio
-import numpy as np
-from constant import (
-    ED_MEAN,
-    ED_STD
-)
 
+import numpy as np
 
 from args import opts
 from model.DDPM import DiffusionModel
-
+from dataset import QuadraACDCDataset
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.callbacks import Callback, ModelCheckpoint
-
-
-
-class TrainingSet(Dataset):
-    def __init__(self, data_dir: str, opts=None):
-        self.data_dir = data_dir
-        
-        self.files = []
-        self.supported_formats = ['.png', '.jpg', '.jpeg', '.bmp']
-        
-        for f in os.listdir(data_dir):
-            fpath = os.path.join(data_dir, f)
-            if os.path.isfile(fpath) and any(f.lower().endswith(ext) for ext in self.supported_formats):
-                img = imageio.imread(fpath)
-                self.files.append(img)
-            
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Grayscale(num_output_channels=1),
-            transforms.Resize((64, 64)),
-            transforms.Normalize(mean=ED_MEAN, std=ED_STD),
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomVerticalFlip(p=0.5),
-        ])
-
-    def __len__(self):
-        return len(self.files)
-    
-    def __getitem__(self, idx):
-        f = self.files[idx]
-        return self.transform(f)
 
 
 class DiffusionData(L.LightningDataModule):
     def __init__(self, data_dir: str, opts=None):
         super().__init__()
         self.data_dir = data_dir
-        self.dataset = TrainingSet(data_dir)
+        self.dataset = QuadraACDCDataset(
+            data_dir,
+            transform= transforms.Compose([
+                transforms.ToTensor(),
+            ])
+        )
         
     def train_dataloader(self):
         return DataLoader(
@@ -74,7 +43,7 @@ class DiffusionData(L.LightningDataModule):
         )
 
 
-data = DiffusionData(opts.img_root, opts)
+data = DiffusionData(opts.data_root, opts)
 model = DiffusionModel(opts)
 
 breakpoint()

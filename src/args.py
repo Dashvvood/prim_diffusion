@@ -14,6 +14,9 @@ parser.add_argument("--device_num", type=int, default=1, help="Device number to 
 # Data and Input Parameters
 parser.add_argument("--img_size", type=int, default=28, help="Size of input images")
 parser.add_argument("--img_root", type=str, default=".", help="Root directory of images")
+parser.add_argument("--data_root", type=str, default=".", help="Root directory of images")
+parser.add_argument("--in_channels", type=int, default=1, help="input channels of unet")
+parser.add_argument("--out_channels", type=int, default=1, help="output channels of unet")
 
 # Checkpoint and Logging
 parser.add_argument("--ckpt", type=str, default=None, help="Path to checkpoint file")

@@ -8,9 +8,9 @@ class DiffusionModel(L.LightningModule):
     def __init__(self, opts):
         super().__init__()
         self.model = diffusers.models.UNet2DModel(
-            sample_size=64,
-            in_channels=1,
-            out_channels=1,
+            sample_size=opts.img_size,
+            in_channels=opts.in_channels,
+            out_channels=opts.out_channels,
             block_out_channels=[64, 128, 256, 512],
         )
         self.scheduler = diffusers.schedulers.DDPMScheduler()
