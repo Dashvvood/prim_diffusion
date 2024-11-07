@@ -34,7 +34,7 @@ class DiffusionData(L.LightningDataModule):
             transform= transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Resize((opts.img_size, opts.img_size)),
-                transforms.Normalize([0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]),
+                # transforms.Normalize([0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]),
             ])
         )
 
