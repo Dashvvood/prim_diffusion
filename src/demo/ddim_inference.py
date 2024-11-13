@@ -18,3 +18,4 @@ unet = UNet2DModel.from_config(unet_config)
 
 scheduler_config = DDPMScheduler.load_config(opts.scheduler_config)
 scheduler = DDIMScheduler.from_config(scheduler_config)
+

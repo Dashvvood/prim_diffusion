@@ -14,6 +14,7 @@ class DiffusionModel(L.LightningModule):
             in_channels=opts.in_channels,
             out_channels=opts.out_channels,
             block_out_channels=[64, 128, 256, 512],
+            center_input_sample=True, # 2 * x - 1.0 in forward fn
         )
         self.scheduler = diffusers.schedulers.DDPMScheduler()
         self.opts = opts
