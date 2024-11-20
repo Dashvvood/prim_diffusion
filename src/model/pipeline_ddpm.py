@@ -35,6 +35,7 @@ class DDPMPipelineV2(DDPMPipeline):
         return_dict: bool = True,
         mean = 0.5,
         std = 0.5,
+        callback=None,
     ) -> Union[ImagePipelineOutput, Tuple]:
         r"""
         The call function to the pipeline for generation.
@@ -100,6 +101,11 @@ class DDPMPipelineV2(DDPMPipeline):
 
             # 2. compute previous image: x_t -> x_t-1
             image = self.scheduler.step(model_output, t, image, generator=generator).prev_sample
+       
+            # call back
+            if callback is not None:
+                callback(image, t)
+            
         # image = (image * 0.5 + 0.5).clamp(0, 1) # version originale 
         image = (image * std + mean).clamp(0, 1) # version changee
         image = image.cpu().permute(0, 2, 3, 1).numpy()

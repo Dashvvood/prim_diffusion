@@ -21,7 +21,8 @@ class DDIMPipelineV2(DDIMPipeline):
         output_type: Optional[str] = "pil",
         return_dict: bool = True,
         mean=0.5,
-        std=0.5
+        std=0.5,
+        callback=None,
     ) -> Union[ImagePipelineOutput, Tuple]:
         r"""
         The call function to the pipeline for generation.
@@ -108,8 +109,10 @@ class DDIMPipelineV2(DDIMPipeline):
             image = self.scheduler.step(
                 model_output, t, image, eta=eta, use_clipped_model_output=use_clipped_model_output, generator=generator
             ).prev_sample
-
-        image = (image * mean + std).clamp(0, 1)
+            if callback is not None:
+                callback(image, t)
+                
+        image = (image * std + mean).clamp(0, 1)
         image = image.cpu().permute(0, 2, 3, 1).numpy()
         if output_type == "pil":
             image = self.numpy_to_pil(image)

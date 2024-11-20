@@ -34,7 +34,6 @@ class DiffusionData(L.LightningDataModule):
             transform= transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Resize((opts.img_size, opts.img_size)),
-                # transforms.Normalize([0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]),
             ])
         )
 
@@ -51,6 +50,11 @@ class DiffusionData(L.LightningDataModule):
 data = DiffusionData(opts.data_root, opts)
 model = DiffusionModel(opts)
 
+# TODO: save config
+# model.model.
+
+model.model.save_config(os.path.join(opts.ckpt_dir, o_d, "unet.json"))
+model.scheduler.save_config(os.path.join(opts.ckpt_dir, o_d, "scheduler.json"))
 
 wandblogger = WandbLogger(
     name=f"{o_d}_{thisfile}_{opts.ps}", 
