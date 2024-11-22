@@ -18,7 +18,7 @@ class TrainableDDPM(L.LightningModule):
         self.opts = opts
         
     @classmethod
-    def from_config(cls, unet_config, scheduler_config):
+    def from_config(cls, unet_config, scheduler_config, opts):
         if isinstance(unet_config, str):
             config = UNet2DModel.load_config(unet_config)
             unet = UNet2DModel.from_config(config)
@@ -35,7 +35,7 @@ class TrainableDDPM(L.LightningModule):
         else:
             raise ValueError("scheduler_config must be a path or a dictionary")
         
-        return cls(unet=unet, scheduler=scheduler)
+        return cls(unet=unet, scheduler=scheduler, opts=opts)
     
     def training_step(self, batch, batch_idx):
         images = batch[0]
