@@ -11,7 +11,7 @@ from diffusers import (
 class TrainableDDPM(L.LightningModule):
     def __init__(self, unet, scheduler, opts=None):
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=['unet'])
         
         self.unet = unet
         self.scheduler = scheduler
