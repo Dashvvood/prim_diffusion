@@ -1,6 +1,6 @@
 {
   "_class_name": "DDPMScheduler",
-  "_diffusers_version": "0.27.2",
+  "_diffusers_version": "0.31.0",
   "beta_end": 0.02,
   "beta_schedule": "linear",
   "beta_start": 0.0001,

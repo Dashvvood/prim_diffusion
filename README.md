@@ -31,7 +31,7 @@ ES: End-Systole（收缩末期）
 | 2     | Left Ventricle, LV                    |
 | 3     | Myocardium of the Left Ventricle, MYO |
 
-![img](https://www.myheart.org.sg/wp-content/uploads/2022/01/How-Your-Heart-Works-2-scaled.jpg)
+![img](./README.assets/How-Your-Heart-Works-2-scaled.jpg)
 
 **Class**
 - NOR: 

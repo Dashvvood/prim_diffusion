@@ -2,23 +2,41 @@ import torch
 import diffusers
 import lightning as L
 
-from utils.cos_warmup_scheduler import get_cosine_schedule_with_warmup
+from diffusers import (
+    UNet2DModel,
+    DDPMScheduler,
+    get_cosine_schedule_with_warmup
+)
 
-class DiffusionModel(L.LightningModule):
-    def __init__(self, opts=None):
+class TrainableDDPM(L.LightningModule):
+    def __init__(self, unet, scheduler, opts=None):
         super().__init__()
         self.save_hyperparameters()
         
-        self.model = diffusers.models.UNet2DModel(
-            sample_size=opts.img_size,
-            in_channels=opts.in_channels,
-            out_channels=opts.out_channels,
-            block_out_channels=[64, 128, 256, 512],
-            center_input_sample=True, # 2 * x - 1.0 in forward fn
-        )
-        self.scheduler = diffusers.schedulers.DDPMScheduler()
+        self.unet = unet
+        self.scheduler = scheduler
         self.opts = opts
         
+    @classmethod
+    def from_config(cls, unet_config, scheduler_config):
+        if isinstance(unet_config, str):
+            config = UNet2DModel.load_config(unet_config)
+            unet = UNet2DModel.from_config(config)
+        elif isinstance(unet_config, dict):
+            unet = UNet2DModel.from_config(unet_config)
+        else:
+            raise ValueError("unet_config must be a path or a dictionary")
+        
+        if isinstance(scheduler_config, str):
+            config = DDPMScheduler.load_config(scheduler_config)
+            scheduler = DDPMScheduler.from_config(config)
+        elif isinstance(scheduler_config, dict):
+            scheduler = DDPMScheduler(**scheduler_config)
+        else:
+            raise ValueError("scheduler_config must be a path or a dictionary")
+        
+        return cls(unet=unet, scheduler=scheduler)
+    
     def training_step(self, batch, batch_idx):
         images = batch[0]
         noise = torch.randn_like(images)
@@ -42,5 +60,7 @@ class DiffusionModel(L.LightningModule):
             num_warmup_steps=self.opts.warmup_epochs,
             num_training_steps=self.opts.max_epochs,
         )
+        
         return [optimizer], [scheduler]
+    
     

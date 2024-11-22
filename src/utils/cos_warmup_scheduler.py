@@ -1,3 +1,6 @@
+# Just use the line below if we need diffusers as main tool
+# from diffusers.optimization import get_cosine_schedule_with_warmup
+
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 #

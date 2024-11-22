@@ -1,6 +1,6 @@
 {
   "_class_name": "UNet2DModel",
-  "_diffusers_version": "0.27.2",
+  "_diffusers_version": "0.31.0",
   "act_fn": "silu",
   "add_attention": true,
   "attention_head_dim": 8,
@@ -33,7 +33,7 @@
   "num_train_timesteps": null,
   "out_channels": 4,
   "resnet_time_scale_shift": "default",
-  "sample_size": 64,
+  "sample_size": null,
   "time_embedding_type": "positional",
   "up_block_types": [
     "AttnUpBlock2D",
