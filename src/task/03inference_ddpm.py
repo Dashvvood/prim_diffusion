@@ -85,16 +85,16 @@ for k in range(0, opts.total_num, opts.batch_size):
 
     for i, raw in enumerate(images):
         im123 = Image.fromarray((raw[..., 1:] * 255).astype(np.uint8))
-        im123.save(os.path.join(raw_output_dir, "123", f"{k+i:04d}.png"))
+        im123.save(os.path.join(raw_output_dir, "123", f"{k+i}.png"))
         
         for j in range(4):
             im = Image.fromarray((raw[..., j] * 255).astype(np.uint8))
-            im.save(os.path.join(raw_output_dir, str(j), f"{k+i:04d}.png"))
+            im.save(os.path.join(raw_output_dir, str(j), f"{k+i}.png"))
         
         nms = NMS(raw)
         im123 = Image.fromarray((nms[..., 1:] * 255).astype(np.uint8))
-        im123.save(os.path.join(nms_output_dir, "123", f"{k+i:04d}.png"))
+        im123.save(os.path.join(nms_output_dir, "123", f"{k+i}.png"))
         
         for j in range(4):
             im = Image.fromarray((nms[..., j] * 255).astype(np.uint8))
-            im.save(os.path.join(nms_output_dir, str(j), f"{k+i:04d}.png"))
+            im.save(os.path.join(nms_output_dir, str(j), f"{k+i}.png"))
