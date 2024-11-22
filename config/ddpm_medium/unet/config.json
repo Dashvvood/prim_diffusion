@@ -6,10 +6,10 @@
   "attention_head_dim": 8,
   "attn_norm_num_groups": null,
   "block_out_channels": [
-    64,
-    128,
-    256,
-    512
+    224,
+    448,
+    672,
+    896
   ],
   "center_input_sample": false,
   "class_embed_type": null,
@@ -33,7 +33,7 @@
   "num_train_timesteps": null,
   "out_channels": 4,
   "resnet_time_scale_shift": "default",
-  "sample_size": 64,
+  "sample_size": null,
   "time_embedding_type": "positional",
   "up_block_types": [
     "AttnUpBlock2D",

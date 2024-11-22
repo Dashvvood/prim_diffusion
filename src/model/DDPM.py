@@ -47,6 +47,11 @@ class TrainableDDPM(L.LightningModule):
         self.log("train_loss", loss, prog_bar=True)
         return loss
 
+    @torch.no_grad()
+    def on_train_epoch_end(self):
+        # TODO: sampling
+        pass
+    
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(
             self.parameters(), 
