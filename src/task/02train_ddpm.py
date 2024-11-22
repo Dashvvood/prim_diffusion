@@ -31,7 +31,9 @@ class DiffusionData(L.LightningDataModule):
             metadata="quadra_per_slice_train.csv",
             transform= transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Resize((opts.img_size, opts.img_size)),
+                transforms.Resize((opts.img_size, opts.img_size), 
+                    interpolation=transforms.InterpolationMode.NEAREST
+                ),
             ])
         )
 
