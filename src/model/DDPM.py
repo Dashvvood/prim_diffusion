@@ -28,6 +28,7 @@ class TrainableDDPM(L.LightningModule):
             raise ValueError("unet_config must be a path or a dictionary")
         
         if isinstance(scheduler_config, str):
+            breakpoint()
             config = DDPMScheduler.load_config(scheduler_config)
             scheduler = DDPMScheduler.from_config(config)
         elif isinstance(scheduler_config, dict):
