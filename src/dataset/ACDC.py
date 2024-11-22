@@ -35,7 +35,6 @@ class QuadraACDCDataset(Dataset):
     
     @staticmethod
     def collate_fn(batch):
-        breakpoint()
         data = torch.stack([x[0] for x in batch])
         meta = pd.concat([x[1] for x in batch], axis=1).T
         return data, meta

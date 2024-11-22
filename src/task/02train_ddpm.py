@@ -26,7 +26,8 @@ class DiffusionData(L.LightningDataModule):
         super().__init__()
         self.data_dir = data_dir
         self.dataset = QuadraACDCDataset(
-            data_dir,
+            root_dir=data_dir,
+            h5data="acdc_quadra.h5",
             metadata="quadra_per_slice_train.csv",
             transform= transforms.Compose([
                 transforms.ToTensor(),
