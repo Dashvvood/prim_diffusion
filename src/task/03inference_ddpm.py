@@ -68,9 +68,9 @@ ddpm_scheduler = DDPMScheduler.from_config(scheduler_config)
 
 if opts.ddim:
     ddim_scheduler = DDIMScheduler.from_config(scheduler_config)
-    pipe = DDIMPipelineV2(unet, ddim_scheduler)
+    pipe = DDIMPipelineV2(unet, ddim_scheduler).to("cuda")
 else:
-    pipe = DDPMPipelineV2(unet, ddpm_scheduler)
+    pipe = DDPMPipelineV2(unet, ddpm_scheduler).to("cuda")
 
 
 for k in range(0, opts.total_num, opts.batch_size):
