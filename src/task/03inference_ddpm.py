@@ -45,6 +45,19 @@ os.makedirs(nms_output_dir, exist_ok=True)
 os.makedirs(os.path.join(raw_output_dir, "123"), exist_ok=True)
 os.makedirs(os.path.join(nms_output_dir, "123"), exist_ok=True)
 
+# # raw
+# 0
+# 1
+# 2
+# 3
+# 123(rgb)
+# # nms
+# 0
+# 1
+# 2
+# 3
+# 123(rgb)
+
 for i in range(4):
     os.makedirs(os.path.join(raw_output_dir, str(i)), exist_ok=True)
     os.makedirs(os.path.join(nms_output_dir, str(i)), exist_ok=True)
@@ -79,11 +92,12 @@ for k in range(0, opts.total_num, opts.batch_size):
         batch_size=batch_size,
         num_inference_steps=opts.num_inference_steps,
         output_type=opts.output_type,
-        mean=opts.mean,
-        std=opts.std,
+        mean=opts.mean, # 0.5
+        std=opts.std,  # 0.5
     ).images
 
     for i, raw in enumerate(images):
+        breakpoint()
         im123 = Image.fromarray((raw[..., 1:] * 255).astype(np.uint8))
         im123.save(os.path.join(raw_output_dir, "123", f"{k+i}.png"))
         

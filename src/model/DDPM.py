@@ -38,11 +38,11 @@ class TrainableDDPM(L.LightningModule):
         return cls(unet=unet, scheduler=scheduler, opts=opts)
     
     def training_step(self, batch, batch_idx):
-        images = batch[0]
-        noise = torch.randn_like(images)
+        images = batch[0]  # {-1.0, 1.0}
+        noise = torch.randn_like(images) # [-1, 1]
         steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device)
         noisy_images = self.scheduler.add_noise(images, noise, steps)
-        residual = self.unet(noisy_images, steps).sample
+        residual = self.unet(noisy_images, steps).sample  # TODO: remove centering 
         loss = torch.nn.functional.mse_loss(residual, noise)
         self.log("train_loss", loss, prog_bar=True)
         return loss
@@ -67,5 +67,6 @@ class TrainableDDPM(L.LightningModule):
         )
         
         return [optimizer], [scheduler]
+    
     
     

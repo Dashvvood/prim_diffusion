@@ -34,6 +34,7 @@ class DiffusionData(L.LightningDataModule):
                 transforms.Resize((opts.img_size, opts.img_size), 
                     interpolation=transforms.InterpolationMode.NEAREST
                 ),
+                transforms.Normalize((0.5,), (0.5,))
             ])
         )
 
