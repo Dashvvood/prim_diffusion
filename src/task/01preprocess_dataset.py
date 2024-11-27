@@ -1,3 +1,8 @@
+"""
+Preprocess the ACDC dataset to generate the quadra representation [H, W, C=4] of the masks.
+python --data_dir ../../data/ACDC/ --output_dir .
+"""
+
 import os
 import motti
 motti.append_current_dir(os.path.abspath(''))
@@ -141,9 +146,3 @@ if __name__ == '__main__':
     num_train, num_test = data2h5_per_slice(opts.data_dir, opts.output_dir, headers)
     print(f"Number of training samples: {num_train}", f"Number of testing samples: {num_test}")
     
-    
-
-
-
-    
-
