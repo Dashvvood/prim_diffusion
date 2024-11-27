@@ -35,9 +35,9 @@ parser.add_argument("--accumulate_grad_batches", type=int, default=1, help="Accu
 parser.add_argument("--project", type=str, default="prim", help="Project name")
 parser.add_argument("--ps", type=str, default="postscript", help="Postscript")
 
-# Data Augmentation
-parser.add_argument("-p", "--proportion", type=float, default=1.0, help="Proportion of data used")
-parser.add_argument("--jitter_p", type=float, default=0.5, help="Probability of jitter in data augmentation")
+# # Data Augmentation
+# parser.add_argument("-p", "--proportion", type=float, default=1.0, help="Proportion of data used")
+# parser.add_argument("--jitter_p", type=float, default=0.5, help="Probability of jitter in data augmentation")
 
 # Boolean Flags
 parser.add_argument("--fast", action="store_true", help="Use fast mode")
