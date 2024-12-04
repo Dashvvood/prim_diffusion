@@ -1,12 +1,11 @@
 """
 python 02train_ddpm.py --unet_config ../../config/ddpm_small/unet/ \
 --scheduler_config ../../config/ddpm_small/scheduler/ --batch_size 64 \
---warmup_epochs 10 --max_epoch 100 --num_workers 8 --device_num 1 \
+--warmup_epochs 20 --max_epoch 200 --num_workers 8 --device_num 1 \
 --data_root ../../data/ACDC/quadra/ --ckpt_dir ../../ckpt/prim/ \
 --log_dir ../../logs/ --lr 1e-4 --img_size 64 --project prim \
 --log_step 1 --ps debug
 """
-
 import os
 import motti
 motti.append_parent_dir(__file__)
@@ -42,18 +41,18 @@ class DiffusionData(L.LightningDataModule):
     ):
         super().__init__()
         self.data_dir = data_dir
-        self.dataset = QuadraACDCDataset(
-            root_dir=data_dir,
-            h5data="acdc_quadra.h5",
-            metadata="quadra_per_slice_train.csv",
-            transform= transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Resize((opts.img_size, opts.img_size), 
-                    interpolation=transforms.InterpolationMode.NEAREST
-                ),
-                transforms.Normalize((0.5,), (0.5,))
-            ])
-        )
+        # self.dataset = QuadraACDCDataset(
+        #     root_dir=data_dir,
+        #     h5data="acdc_quadra.h5",
+        #     metadata="quadra_per_slice_train.csv",
+        #     transform= transforms.Compose([
+        #         transforms.ToTensor(),
+        #         transforms.Resize((opts.img_size, opts.img_size), 
+        #             interpolation=transforms.InterpolationMode.NEAREST
+        #         ),
+        #         transforms.Normalize((0.5,), (0.5,))
+        #     ])
+        # )
         
         
         self.transform = transforms.Compose([
@@ -137,7 +136,6 @@ checkpoint_callback = ModelCheckpoint(
     dirpath=os.path.join(opts.ckpt_dir, o_d),
     monitor="val_loss", mode="min"
 )
-# TODO: val_loss
 
 trainer = L.Trainer(
     max_epochs=opts.max_epochs,

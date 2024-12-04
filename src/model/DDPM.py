@@ -55,7 +55,7 @@ class TrainableDDPM(L.LightningModule):
     def training_step(self, batch, batch_idx):
         images = batch[0]
         noise = torch.randn_like(images)
-        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device)
+        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device, generator=self.g)
         noisy_images = self.scheduler.add_noise(images, noise, steps)
         residual = self.unet(noisy_images, steps).sample
         loss = torch.nn.functional.mse_loss(residual, noise)
@@ -64,7 +64,7 @@ class TrainableDDPM(L.LightningModule):
 
 
     def on_validation_epoch_start(self):
-        self.g = torch.Generator().manual_seed(VAL_SEED)
+        self.g = torch.Generator(self.device).manual_seed(VAL_SEED)
         
         
     def validation_step(self, batch, batch_idx):
@@ -139,9 +139,8 @@ class TrainableDDPMbyClass(L.LightningModule):
     def training_step(self, batch, batch_idx):
         images = batch[0]
         class_labels = self._get_batch_class_idx_from_meta(batch[1]).to(self.device)
-        
         noise = torch.randn_like(images)
-        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device)
+        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device, generator=self.g)
         noisy_images = self.scheduler.add_noise(images, noise, steps)
         residual = self.unet(sample=noisy_images, timestep=steps, class_labels=class_labels).sample
         loss = torch.nn.functional.mse_loss(residual, noise)
@@ -150,7 +149,7 @@ class TrainableDDPMbyClass(L.LightningModule):
     
     @torch.no_grad()
     def on_validation_epoch_start(self):
-        self.g = torch.Generator().manual_seed(VAL_SEED)
+        self.g = torch.Generator(self.device).manual_seed(VAL_SEED)
 
     def validation_step(self, batch, batch_idx):
         images = batch[0]

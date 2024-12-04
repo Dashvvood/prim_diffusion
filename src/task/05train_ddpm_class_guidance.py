@@ -42,18 +42,18 @@ class DiffusionData(L.LightningDataModule):
     ):
         super().__init__()
         self.data_dir = data_dir
-        self.dataset = QuadraACDCDataset(
-            root_dir=data_dir,
-            h5data="acdc_quadra.h5",
-            metadata="quadra_per_slice_train.csv",
-            transform= transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Resize((opts.img_size, opts.img_size), 
-                    interpolation=transforms.InterpolationMode.NEAREST
-                ),
-                transforms.Normalize((0.5,), (0.5,))
-            ])
-        )
+        # self.dataset = QuadraACDCDataset(
+        #     root_dir=data_dir,
+        #     h5data="acdc_quadra.h5",
+        #     metadata="quadra_per_slice_train.csv",
+        #     transform= transforms.Compose([
+        #         transforms.ToTensor(),
+        #         transforms.Resize((opts.img_size, opts.img_size), 
+        #             interpolation=transforms.InterpolationMode.NEAREST
+        #         ),
+        #         transforms.Normalize((0.5,), (0.5,))
+        #     ])
+        # )
         
         
         self.transform = transforms.Compose([
