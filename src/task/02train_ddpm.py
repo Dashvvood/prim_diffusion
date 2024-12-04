@@ -108,7 +108,7 @@ class DiffusionData(L.LightningDataModule):
     def val_dataloader(self):
         return DataLoader(
             self.valset,
-            shuffle=True,
+            shuffle=False, # keep same order
             batch_size=opts.batch_size,
             num_workers=opts.num_workers,
             collate_fn=QuadraACDCDataset.collate_fn,

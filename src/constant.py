@@ -15,3 +15,8 @@ CLASS2IDX = {
 }
 
 IDX2CLASS = {v: k for k, v in CLASS2IDX.items()}
+
+
+# TODO
+
+VAL_SEED = 42

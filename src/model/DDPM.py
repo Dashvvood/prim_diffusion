@@ -12,7 +12,10 @@ from diffusers import (
     get_cosine_schedule_with_warmup
 )
 
-from constant import CLASS2IDX
+from constant import (
+    CLASS2IDX,
+    VAL_SEED
+)
 
 class TrainableDDPM(L.LightningModule):
     def __init__(self, unet, scheduler, opts=None):
@@ -26,6 +29,7 @@ class TrainableDDPM(L.LightningModule):
         #1 an mixed embedding = class embedding + Timestep embedding WITH unet2d
         #2 class embedding with ConditionalUNet2D
         # addaptive layer normalization in SELF-ATTENTION LAYER
+        
         
     @classmethod
     def from_config(cls, unet_config, scheduler_config, opts):
@@ -47,6 +51,7 @@ class TrainableDDPM(L.LightningModule):
         
         return cls(unet=unet, scheduler=scheduler, opts=opts)
     
+    
     def training_step(self, batch, batch_idx):
         images = batch[0]
         noise = torch.randn_like(images)
@@ -57,24 +62,23 @@ class TrainableDDPM(L.LightningModule):
         self.log("train_loss", loss, prog_bar=True)
         return loss
 
+
+    def on_validation_epoch_start(self):
+        self.g = torch.Generator().manual_seed(VAL_SEED)
+        
+        
     def validation_step(self, batch, batch_idx):
         images = batch[0]
         noise = torch.randn_like(images)
-        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device)
+        # TODO: fix timesteps for validation for each epoch: 
+        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device) # TODO
+        # steps = f(batch_idx)
         noisy_images = self.scheduler.add_noise(images, noise, steps)
         residual = self.unet(noisy_images, steps).sample
         loss = torch.nn.functional.mse_loss(residual, noise)
         self.log("val_loss", loss, prog_bar=True)
         return loss
-    
-    @torch.no_grad()
-    def on_train_epoch_end(self):
-        # TODO: sampling
-        pass
-    
-    @torch.no_grad()
-    def on_validation_epoch_end(self):
-        pass
+
     
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(
@@ -143,6 +147,10 @@ class TrainableDDPMbyClass(L.LightningModule):
         loss = torch.nn.functional.mse_loss(residual, noise)
         self.log("train_loss", loss, prog_bar=True)
         return loss
+    
+    @torch.no_grad()
+    def on_validation_epoch_start(self):
+        self.g = torch.Generator().manual_seed(VAL_SEED)
 
     def validation_step(self, batch, batch_idx):
         images = batch[0]
@@ -150,20 +158,19 @@ class TrainableDDPMbyClass(L.LightningModule):
         
         noise = torch.randn_like(images)
         steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device)
+        
         noisy_images = self.scheduler.add_noise(images, noise, steps)
         residual = self.unet(sample=noisy_images, timestep=steps, class_labels=class_labels).sample
         loss = torch.nn.functional.mse_loss(residual, noise)
         self.log("val_loss", loss, prog_bar=True)
         return loss
     
-    @torch.no_grad()
-    def on_train_epoch_end(self):
-        # TODO: sampling
-        pass
     
     @torch.no_grad()
     def on_validation_epoch_end(self):
         pass
+        batch_size = min(8, self.opts.batch_size)
+        
     
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(

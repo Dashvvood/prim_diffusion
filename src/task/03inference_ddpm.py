@@ -1,3 +1,9 @@
+"""
+python 03inference_ddpm.py --ckpt ../../ckpt/prim/20241127-152255/epoch\=80-step\=2349.ckpt \
+--unet_config ../../config/ddpm_small/unet --scheduler_config ../../config/ddpm_small/scheduler \
+--batch_size 256 --total_num 1024 --num_inference_steps 1000 --mean 0.5 --std 0.5 \
+--output_type numpy --output_dir ../../output/
+"""
 import os
 import motti
 motti.append_current_dir(os.path.abspath(''))
