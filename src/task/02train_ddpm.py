@@ -4,7 +4,7 @@ python 02train_ddpm.py --unet_config ../../config/ddpm_small/unet/ \
 --warmup_epochs 20 --max_epoch 200 --num_workers 8 --device_num 1 \
 --data_root ../../data/ACDC/quadra/ --ckpt_dir ../../ckpt/prim/ \
 --log_dir ../../logs/ --lr 1e-4 --img_size 64 --project prim \
---log_step 1 --ps debug
+--log_step 1 --ps 200epoch
 """
 import os
 import motti
@@ -41,20 +41,7 @@ class DiffusionData(L.LightningDataModule):
     ):
         super().__init__()
         self.data_dir = data_dir
-        # self.dataset = QuadraACDCDataset(
-        #     root_dir=data_dir,
-        #     h5data="acdc_quadra.h5",
-        #     metadata="quadra_per_slice_train.csv",
-        #     transform= transforms.Compose([
-        #         transforms.ToTensor(),
-        #         transforms.Resize((opts.img_size, opts.img_size), 
-        #             interpolation=transforms.InterpolationMode.NEAREST
-        #         ),
-        #         transforms.Normalize((0.5,), (0.5,))
-        #     ])
-        # )
-        
-        
+   
         self.transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize((opts.img_size, opts.img_size), interpolation=transforms.InterpolationMode.NEAREST),
@@ -65,7 +52,7 @@ class DiffusionData(L.LightningDataModule):
         self.train_metadata = train_metadata
         self.test_metadata = test_metadata
         self.val_metadata = val_metadata
-        
+        self.opts = opts
         
     def setup(self, stage=None):
         if stage == "fit":
@@ -98,8 +85,8 @@ class DiffusionData(L.LightningDataModule):
         return DataLoader(
             self.trainset,
             shuffle=True,
-            batch_size=opts.batch_size,
-            num_workers=opts.num_workers,
+            batch_size=self.opts.batch_size,
+            num_workers=self.opts.num_workers,
             collate_fn=QuadraACDCDataset.collate_fn,
         )
         
@@ -108,8 +95,8 @@ class DiffusionData(L.LightningDataModule):
         return DataLoader(
             self.valset,
             shuffle=False, # keep same order
-            batch_size=opts.batch_size,
-            num_workers=opts.num_workers,
+            batch_size=self.opts.batch_size,
+            num_workers=self.opts.num_workers,
             collate_fn=QuadraACDCDataset.collate_fn,
         )
 

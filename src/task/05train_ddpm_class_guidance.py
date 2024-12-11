@@ -1,8 +1,8 @@
 """
-python 05train_ddpm_class_guidance.py --unet_config 
-../../config/ddpm_small/unet_class/ --scheduler_config ../../config/ddpm_sma
-ll/scheduler/ --batch_size 2 --warmup_epochs 10 --max_epochs 100 --num_worke
-rs 8 --device_num 1 --data_root ../../data/ACDC/quadra/ --ckpt_dir ../../ckp
+python 05train_ddpm_class_guidance.py --unet_config \
+../../config/ddpm_small/unet_class/ --scheduler_config ../../config/ddpm_sma \
+ll/scheduler/ --batch_size 2 --warmup_epochs 10 --max_epochs 100 --num_worke \
+rs 8 --device_num 1 --data_root ../../data/ACDC/quadra/ --ckpt_dir ../../ckp \
 t/prim/ --log_dir ../../logs/ --lr 1e-4 --img_size 64 --project prim --log_step 1 --ps debug
 """
 
