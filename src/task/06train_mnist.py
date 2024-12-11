@@ -1,10 +1,11 @@
 """
-python 06train_mnist.py --unet_config ../../config/ddpm_mnist/unet/ \
+python 06train_mnist.py \
+--unet_config ../../config/ddpm_mnist/unet/ \
 --scheduler_config ../../config/ddpm_mnist/scheduler/ \
---batch_size 128 --warmup_epochs 20 --max_epoch 200 \
---num_workers 8 --device_num 1 --data_root ../../data/MNIST/ \
---ckpt_dir ../../ckpt/prim/ --log_dir ../../logs/ --lr 1e-5 \
---img_size 32 --project prim --log_step 5 --ps mnist
+--batch_size 5 --warmup_epochs 20 --max_epoch 200 \
+--num_workers 8 --device_num 1 --data_root ../../data/ \
+--ckpt_dir ../../ckpt/prim/ --log_dir ../../logs/ \
+--lr 1e-5 --img_size 32 --project prim --log_step 5 --ps mnist
 """
 import os
 import motti

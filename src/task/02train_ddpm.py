@@ -8,8 +8,9 @@ python 02train_ddpm.py --unet_config ../../config/ddpm_small/unet/ \
 """
 import os
 import motti
+from pathlib import Path
 motti.append_parent_dir(__file__)
-thisfile = os.path.basename(__file__).split(".")[0]
+thisfile = Path(__file__).stem
 o_d = motti.o_d()
 
 from args import opts

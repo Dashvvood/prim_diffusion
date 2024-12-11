@@ -6,10 +6,10 @@
   "attention_head_dim": 8,
   "attn_norm_num_groups": null,
   "block_out_channels": [
-    224,
-    448,
-    672,
-    896
+    128,
+    256,
+    512,
+    1024
   ],
   "center_input_sample": false,
   "class_embed_type": null,

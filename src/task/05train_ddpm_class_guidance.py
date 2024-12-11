@@ -8,16 +8,13 @@ t/prim/ --log_dir ../../logs/ --lr 1e-4 --img_size 64 --project prim --log_step 
 
 import os
 import motti
+from pathlib import Path
 motti.append_parent_dir(__file__)
-thisfile = os.path.basename(__file__).split(".")[0]
+thisfile = Path(__file__).stem
 o_d = motti.o_d()
 
 from args import opts
 
-import torch
-import diffusers
-import numpy as np
-import pandas as pd
 import lightning as L
 from torchvision import transforms
 
@@ -41,20 +38,7 @@ class DiffusionData(L.LightningDataModule):
         opts=None
     ):
         super().__init__()
-        self.data_dir = data_dir
-        # self.dataset = QuadraACDCDataset(
-        #     root_dir=data_dir,
-        #     h5data="acdc_quadra.h5",
-        #     metadata="quadra_per_slice_train.csv",
-        #     transform= transforms.Compose([
-        #         transforms.ToTensor(),
-        #         transforms.Resize((opts.img_size, opts.img_size), 
-        #             interpolation=transforms.InterpolationMode.NEAREST
-        #         ),
-        #         transforms.Normalize((0.5,), (0.5,))
-        #     ])
-        # )
-        
+        self.data_dir = data_dir        
         
         self.transform = transforms.Compose([
             transforms.ToTensor(),
@@ -66,7 +50,7 @@ class DiffusionData(L.LightningDataModule):
         self.train_metadata = train_metadata
         self.test_metadata = test_metadata
         self.val_metadata = val_metadata
-        
+        self.opts = opts
         
     def setup(self, stage=None):
         if stage == "fit":
@@ -94,23 +78,21 @@ class DiffusionData(L.LightningDataModule):
         elif stage == "predict":
             raise NotImplementedError("Predict not implemented")
         
-        
     def train_dataloader(self):
         return DataLoader(
             self.trainset,
             shuffle=True,
-            batch_size=opts.batch_size,
-            num_workers=opts.num_workers,
+            batch_size=self.opts.batch_size,
+            num_workers=self.opts.num_workers,
             collate_fn=QuadraACDCDataset.collate_fn,
         )
-        
         
     def val_dataloader(self):
         return DataLoader(
             self.valset,
             shuffle=True,
-            batch_size=opts.batch_size,
-            num_workers=opts.num_workers,
+            batch_size=self.opts.batch_size,
+            num_workers=self.opts.num_workers,
             collate_fn=QuadraACDCDataset.collate_fn,
         )
 
@@ -137,7 +119,6 @@ checkpoint_callback = ModelCheckpoint(
     dirpath=os.path.join(opts.ckpt_dir, o_d),
     monitor="val_loss", mode="min"
 )
-# TODO: val_loss
 
 trainer = L.Trainer(
     max_epochs=opts.max_epochs,
@@ -147,7 +128,6 @@ trainer = L.Trainer(
     logger=wandblogger,
     accumulate_grad_batches=opts.accumulate_grad_batches,
     log_every_n_steps=opts.log_step,
-    # callbacks=[checkpoint_callback, LogConfusionMatrix()],
     callbacks=[checkpoint_callback,],
 )
 
