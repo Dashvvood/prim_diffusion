@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-
+"""
+Source: https://pytorch.org/tutorials/beginner/pytorch_with_examples.html
+"""
 import torch
 import math
 

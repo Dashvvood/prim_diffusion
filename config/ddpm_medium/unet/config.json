@@ -33,7 +33,7 @@
   "num_train_timesteps": null,
   "out_channels": 4,
   "resnet_time_scale_shift": "default",
-  "sample_size": null,
+  "sample_size": 64,
   "time_embedding_type": "positional",
   "up_block_types": [
     "AttnUpBlock2D",
