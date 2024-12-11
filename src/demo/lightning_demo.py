@@ -53,7 +53,7 @@ class MyModel(pl.LightningModule):
 
 if __name__ == '__main__':
     model = MyModel()
-    trainer = pl.Trainer(max_epochs=20, gpus=1)
+    trainer = pl.Trainer(max_epochs=20, devices=1)
     trainer.fit(model)
 
     X = torch.Tensor([[1.0], [51.0], [89.0]])
