@@ -45,6 +45,9 @@ parser.add_argument("--save_training_output", action="store_true", help="Save tr
 parser.add_argument("--frozen", action="store_true", help="Freeze model layers")
 parser.add_argument("--reuse", action="store_true", help="Reuse previous session")
 
+parser.add_argument("--p_uncond", type=float, default=0.1, help="Probability of unconditional sampling")
+parser.add_argument("--p_uncond_label", type=int, default=10, help="Probability of unconditional label sampling")
+
 opts, missing = parser.parse_known_args()
 
 print(f"{opts = }")
