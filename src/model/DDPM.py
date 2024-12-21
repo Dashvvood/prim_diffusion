@@ -104,7 +104,11 @@ class TrainableDDPMbyClass(L.LightningModule):
         
         self.unet = unet
         self.scheduler = scheduler
+        
+        assert hasattr(opts, "p_uncond")
+        assert hasattr(opts, "p_uncond_label")
         self.opts = opts
+        
         
         #1 an mixed embedding = class embedding + Timestep embedding WITH unet2d
         #2 class embedding with ConditionalUNet2D
@@ -139,6 +143,10 @@ class TrainableDDPMbyClass(L.LightningModule):
     def training_step(self, batch, batch_idx):
         images = batch[0]
         class_labels = self._get_batch_class_idx_from_meta(batch[1]).to(self.device)
+        
+        random_uncond_mask = (torch.rand(size=(len(images),))<=self.opts.p_uncond)
+        class_labels[random_uncond_mask] = self.opts.p_uncond_label
+        
         noise = torch.randn_like(images)
         steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device, generator=self.g)
         noisy_images = self.scheduler.add_noise(images, noise, steps)
@@ -154,6 +162,9 @@ class TrainableDDPMbyClass(L.LightningModule):
     def validation_step(self, batch, batch_idx):
         images = batch[0]
         class_labels = self._get_batch_class_idx_from_meta(batch[1]).to(self.device)
+        
+        random_uncond_mask = (torch.rand(size=(len(images),))<=self.opts.p_uncond)
+        class_labels[random_uncond_mask] = self.opts.p_uncond_label
         
         noise = torch.randn_like(images)
         steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device)
