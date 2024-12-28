@@ -1,10 +1,5 @@
 """
-python 05train_ddpm_class_guidance.py --unet_config \
-../../config/ddpm_small/unet_class/ --scheduler_config ../../config/ddpm_sma \
-ll/scheduler/ --batch_size 2 --warmup_epochs 10 --max_epochs 100 --num_worke \
-rs 8 --device_num 1 --data_root ../../data/ACDC/quadra/ --ckpt_dir ../../ckp \
-t/prim/ --log_dir ../../logs/ --lr 1e-4 --img_size 64 --project prim --log_step 1 --ps debug
-"""
+CUDA_VISIBLE_DEVICES=2  python 05train_ddpm_class_guidance.py --unet_config ../../config/ddpm_medium/unet_class/ --scheduler_config ../../config/ddpm_medium/scheduler/ --batch_size 8 --warmup_epochs 20 --max_epochs 200 --num_workers 8 --device_num 1 --data_root ../../data/ACDC/quadra/ --ckpt_dir ../../ckpt/prim/ --log_dir ../../logs/ --lr 1e-4 --img_size 128 --project prim --log_step 5 --ps debug --p_uncond 0.5"""
 
 import os
 import motti
