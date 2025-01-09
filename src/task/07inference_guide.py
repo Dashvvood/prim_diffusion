@@ -81,11 +81,12 @@ else:
 
 
 num_class_embeds = unet.config["num_class_embeds"]
+class_label = -1
 
 for k in range(0, opts.total_num, opts.batch_size):
     batch_size = min(opts.total_num - k, opts.batch_size)
     
-    class_labels = torch.IntTensor([(k + i) % num_class_embeds for i in range(batch_size)]).to("cuda")
+    class_labels = torch.IntTensor([(class_label + i + 1) % num_class_embeds for i in range(batch_size)]).to("cuda")
     
     images = pipe(
         batch_size=batch_size,
