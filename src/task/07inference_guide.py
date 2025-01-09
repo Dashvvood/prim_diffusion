@@ -80,10 +80,12 @@ else:
     pipe = DDPMPipelineV2(unet, ddpm_scheduler).to("cuda")
 
 
+num_class_embeds = unet.config["num_class_embeds"]
+
 for k in range(0, opts.total_num, opts.batch_size):
     batch_size = min(opts.total_num - k, opts.batch_size)
     
-    class_labels = torch.IntTensor([(k + i) % opts.total_num for i in range(batch_size)]).to("cuda")
+    class_labels = torch.IntTensor([(k + i) % num_class_embeds for i in range(batch_size)]).to("cuda")
     
     images = pipe(
         batch_size=batch_size,
