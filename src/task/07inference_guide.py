@@ -101,16 +101,16 @@ for k in range(0, opts.total_num, opts.batch_size):
         class_label = class_labels[i].item()
         
         im123 = Image.fromarray((raw[..., 1:] * 255).astype(np.uint8))
-        im123.save(os.path.join(raw_output_dir, "123", f"{k+i}_class{class_label}.png"))
+        im123.save(os.path.join(raw_output_dir, "123", f"C{class_label}_{k+i}.png"))
         
         for j in range(4):
             im = Image.fromarray((raw[..., j] * 255).astype(np.uint8))
-            im.save(os.path.join(raw_output_dir, str(j), f"{k+i}_class{class_label}.png"))
+            im.save(os.path.join(raw_output_dir, str(j), f"C{class_label}_{k+i}.png"))
         
         nms = NMS(raw)
         im123 = Image.fromarray((nms[..., 1:] * 255).astype(np.uint8))
-        im123.save(os.path.join(nms_output_dir, "123", f"{k+i}_class{class_label}.png"))
+        im123.save(os.path.join(nms_output_dir, "123", f"C{class_label}_{k+i}.png"))
         
         for j in range(4):
             im = Image.fromarray((nms[..., j] * 255).astype(np.uint8))
-            im.save(os.path.join(nms_output_dir, str(j), f"{k+i}_class{class_label}.png"))
+            im.save(os.path.join(nms_output_dir, str(j), f"C{class_label}_{k+i}.png"))
