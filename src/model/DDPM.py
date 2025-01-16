@@ -212,12 +212,15 @@ class TrainableDDPMbyClass(L.LightningModule):
     @torch.no_grad()
     def on_validation_epoch_end(self):
         self.pipe = self.pipe.to(self.device)
+        print(f"{self.device = }")
+        print(f"{self.pipe.device = }")
+        
         batch_size = min(8, self.opts.batch_size)
-        images = self.pipe(batch_size=batch_size, num_inference_steps=1000, generator=self.g, output_type="tensor").images
+        images = self.pipe(batch_size=batch_size, num_inference_steps=1000, generator=self.g, output_type="tensor")[0]
         images = images[:, 1:, :, :]
         grid = make_grid(images, nrow=batch_size)
         self.log({
-            "sampling": wandb.Image(grid, caption=f"Epoch {self.current_epoch}"), 
+            "Sampling": wandb.Image(grid, caption=f"Epoch {self.current_epoch}"), 
         })
         return grid
         
