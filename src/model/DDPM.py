@@ -211,10 +211,7 @@ class TrainableDDPMbyClass(L.LightningModule):
     
     @torch.no_grad()
     def on_validation_epoch_end(self):
-        self.pipe = self.pipe.to(self.device)
-        print(f"{self.device = }")
-        print(f"{self.pipe.device = }")
-        
+        self.pipe = self.pipe.to(self.device)  # make sure use gpu
         batch_size = min(8, self.opts.batch_size)
         images = self.pipe(batch_size=batch_size, num_inference_steps=1000, generator=self.g, output_type="tensor")[0]
         images = images[:, 1:, :, :]
