@@ -2,23 +2,21 @@
 # ed mask mean and std
 from diffusers import StableDiffusionPipeline
 CLASS2IDX = {
-    ('DCM', 'ed'): 0,
-    ('DCM', 'es'): 1,
-    ('HCM', 'ed'): 2,
-    ('HCM', 'es'): 3,
-    ('MINF', 'ed'): 4,
-    ('MINF', 'es'): 5,
-    ('NOR', 'ed'): 6,
-    ('NOR', 'es'): 7,
-    ('RV', 'ed'): 8,
-    ('RV', 'es'): 9,
+    ('Random', 'Random'): 0,
+    ('DCM', 'ed'): 1,
+    ('DCM', 'es'): 2,
+    ('HCM', 'ed'): 3,
+    ('HCM', 'es'): 4,
+    ('MINF', 'ed'): 5,
+    ('MINF', 'es'): 6,
+    ('NOR', 'ed'): 7,
+    ('NOR', 'es'): 8,
+    ('RV', 'ed'): 9,
+    ('RV', 'es'): 10,
 }
 
 # TODO: guidance weight 
-
 IDX2CLASS = {v: k for k, v in CLASS2IDX.items()}
 
-
 # TODO
-
 VAL_SEED = 42

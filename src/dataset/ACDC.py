@@ -10,6 +10,9 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
+from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader
+
 class QuadraACDCDataset(Dataset):
     def __init__(self, root_dir, h5data="acdc_quadra.h5", metadata="quadra_per_slice.csv", transform=None):
         self.root_dir = root_dir
@@ -30,7 +33,6 @@ class QuadraACDCDataset(Dataset):
         row = self.meta.iloc[idx]
         slice_path = row.H5path
         slice = self.data[slice_path][:]
-        
         return slice, row
     
     @staticmethod
@@ -147,4 +149,75 @@ class ACDCDataset(Dataset):
         self.cache_data = cache_data
         return None
 
+
+
+
+class DiffusionData(L.LightningDataModule):
+    def __init__(
+        self, 
+        data_dir: str, 
+        h5data="acdc_quadra.h5",
+        train_metadata="quadra_per_slice_train.csv", 
+        val_metadata="quadra_per_slice_val.csv", 
+        test_metadata="quadra_per_slice_test.csv",
+        opts=None
+    ):
+        super().__init__()
+        self.data_dir = data_dir        
         
+        self.transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize((opts.img_size, opts.img_size), interpolation=transforms.InterpolationMode.NEAREST),
+            transforms.Normalize((0.5,), (0.5,))
+        ])
+        
+        self.h5data = h5data
+        self.train_metadata = train_metadata
+        self.test_metadata = test_metadata
+        self.val_metadata = val_metadata
+        self.opts = opts
+        
+    def setup(self, stage=None):
+        if stage == "fit":
+            self.trainset = QuadraACDCDataset(
+                root_dir=self.data_dir,
+                h5data=self.h5data,
+                metadata=self.train_metadata,
+                transform=self.transform
+            )
+            self.valset = QuadraACDCDataset(
+                root_dir=self.data_dir,
+                h5data=self.h5data,
+                metadata=self.val_metadata,
+                transform=self.transform
+            )
+
+        elif stage == "test":
+            self.testset = QuadraACDCDataset(
+                root_dir=self.data_dir,
+                h5data=self.h5data,
+                metadata=self.test_metadata,
+                transform=self.transform
+            )
+        
+        elif stage == "predict":
+            raise NotImplementedError("Predict not implemented")
+        
+    def train_dataloader(self):
+        return DataLoader(
+            self.trainset,
+            shuffle=True,
+            batch_size=self.opts.batch_size,
+            num_workers=self.opts.num_workers,
+            collate_fn=QuadraACDCDataset.collate_fn,
+        )
+        
+    def val_dataloader(self):
+        return DataLoader(
+            self.valset,
+            shuffle=True,
+            batch_size=self.opts.batch_size,
+            num_workers=self.opts.num_workers,
+            collate_fn=QuadraACDCDataset.collate_fn,
+        )
+

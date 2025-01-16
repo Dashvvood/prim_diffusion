@@ -36,7 +36,9 @@ class DDPMPipelineV2(DDPMPipeline):
         mean = 0.5,
         std = 0.5,
         callback=None,
-        class_labels=None
+        class_labels=None,
+        guidance_scale = 7.5,
+        guidance_rescale = 0.0,
     ) -> Union[ImagePipelineOutput, Tuple]:
         r"""
         The call function to the pipeline for generation.
@@ -92,16 +94,34 @@ class DDPMPipelineV2(DDPMPipeline):
             image = image.to(self.device)
         else:
             image = randn_tensor(image_shape, generator=generator, device=self.device, dtype=self.unet.dtype)
-
+        
+        
+        if class_labels is None:
+            # 0 means random generation, w/o class conditioning
+            class_condition = torch.zeros(batch_size, dtype=torch.long, device=self.device) 
+        else:
+            # double size for uncond and cond
+            class_condition = torch.zeros(batch_size * 2, dtype=torch.long, device=self.device) 
+            class_condition[batch_size:] = torch.tensor(class_labels, dtype=torch.long, device=self.device)
+            
+            
         # set step values
         self.scheduler.set_timesteps(num_inference_steps)
 
         for t in self.progress_bar(self.scheduler.timesteps):
+            
+            # 0. double the image size
+            image_input = torch.cat([image] * 2, dim=0) if class_labels is not None else image
+        
             # 1. predict noise model_output
-            model_output = self.unet(image, t, class_labels=class_labels).sample
-
+            noise_pred = self.unet(image_input, t, class_labels=class_condition).sample
+            
+            if class_labels is not None:
+                noise_pred_uncond, noise_pred_cond = noise_pred.chunk(2)
+                noise_pred = noise_pred_uncond + guidance_scale * (noise_pred_cond - noise_pred_uncond)
+                
             # 2. compute previous image: x_t -> x_t-1
-            image = self.scheduler.step(model_output, t, image, generator=generator).prev_sample
+            image = self.scheduler.step(noise_pred, t, image, generator=generator).prev_sample
        
             # call back
             if callback is not None:
@@ -109,7 +129,12 @@ class DDPMPipelineV2(DDPMPipeline):
             
         # image = (image * 0.5 + 0.5).clamp(0, 1) # version originale 
         image = (image * std + mean).clamp(0, 1) # version changee
+        
+        if output_type == "tensor":
+            return image.cpu()
+        
         image = image.cpu().permute(0, 2, 3, 1).numpy()
+        
         if output_type == "pil":
             image = self.numpy_to_pil(image)
 

@@ -4,6 +4,11 @@ motti.append_parent_dir(__file__)
 
 import torch
 import diffusers
+from diffusers import DDPMPipeline, ImagePipelineOutput
+from diffusers.utils.torch_utils import randn_tensor
+from typing import List, Optional, Tuple, Union
+
+from torchvision.utils import make_grid 
 import lightning as L
 
 from diffusers import (
@@ -17,6 +22,11 @@ from constant import (
     VAL_SEED
 )
 
+import wandb
+
+from .pipeline_ddpm import DDPMPipelineV2
+
+
 class TrainableDDPM(L.LightningModule):
     def __init__(self, unet, scheduler, opts=None):
         super().__init__()
@@ -25,6 +35,8 @@ class TrainableDDPM(L.LightningModule):
         self.unet = unet
         self.scheduler = scheduler
         self.opts = opts
+        
+        self.pipe = DDPMPipelineV2(unet, scheduler)
         
         #1 an mixed embedding = class embedding + Timestep embedding WITH unet2d
         #2 class embedding with ConditionalUNet2D
@@ -96,6 +108,34 @@ class TrainableDDPM(L.LightningModule):
         
         return [optimizer], [scheduler]
     
+    def forward(
+        self,
+        batch_size: int = 1,
+        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
+        num_inference_steps: int = 1000,
+        output_type: Optional[str] = "pil",
+        return_dict: bool = True,
+        mean = 0.5,
+        std = 0.5,
+        callback=None,
+        class_labels: List[int]=None,
+        guidance_scale = 7.5,
+        guidance_rescale = 0.0,
+    ) -> Union[ImagePipelineOutput, Tuple]:
+
+        return self.pipe(
+            batch_size=batch_size,
+            generator=generator,
+            num_inference_steps=num_inference_steps,
+            output_type=output_type,
+            return_dict=return_dict,
+            mean=mean,
+            std=std,
+            callback=callback,
+            class_labels=class_labels,
+            guidance_scale=guidance_scale,
+            guidance_rescale=guidance_rescale,
+        )
 
 class TrainableDDPMbyClass(L.LightningModule):
     def __init__(self, unet, scheduler, opts=None):
@@ -104,18 +144,11 @@ class TrainableDDPMbyClass(L.LightningModule):
         
         self.unet = unet
         self.scheduler = scheduler
-        
-        assert hasattr(opts, "p_uncond")
-        assert hasattr(opts, "p_uncond_label")
         self.opts = opts
-        
-        
-        #1 an mixed embedding = class embedding + Timestep embedding WITH unet2d
-        #2 class embedding with ConditionalUNet2D
-        # addaptive layer normalization in SELF-ATTENTION LAYER
+        self.pipe = DDPMPipelineV2(unet, scheduler)
         
     @classmethod
-    def from_config(cls, unet_config, scheduler_config, opts):
+    def from_config(cls, unet_config, scheduler_config, opts=None):
         if isinstance(unet_config, str):
             config = UNet2DModel.load_config(unet_config)
             unet = UNet2DModel.from_config(config)
@@ -148,7 +181,7 @@ class TrainableDDPMbyClass(L.LightningModule):
         class_labels[random_uncond_mask] = self.opts.p_uncond_label
         
         noise = torch.randn_like(images)
-        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device, generator=self.g)
+        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device, )
         noisy_images = self.scheduler.add_noise(images, noise, steps)
         residual = self.unet(sample=noisy_images, timestep=steps, class_labels=class_labels).sample
         loss = torch.nn.functional.mse_loss(residual, noise)
@@ -167,7 +200,7 @@ class TrainableDDPMbyClass(L.LightningModule):
         class_labels[random_uncond_mask] = self.opts.p_uncond_label
         
         noise = torch.randn_like(images)
-        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device)
+        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device, generator=self.g)
         
         noisy_images = self.scheduler.add_noise(images, noise, steps)
         residual = self.unet(sample=noisy_images, timestep=steps, class_labels=class_labels).sample
@@ -178,8 +211,14 @@ class TrainableDDPMbyClass(L.LightningModule):
     
     @torch.no_grad()
     def on_validation_epoch_end(self):
-        pass
         batch_size = min(8, self.opts.batch_size)
+        images = self.pipe(batch_size=batch_size, num_inference_steps=1000, output_type="tensor").images
+        images = images[:, 1:, :, :]
+        grid = make_grid(images, nrow=batch_size)
+        self.log({
+            "sampling": wandb.Image(grid, caption=f"Epoch {self.current_epoch}"), 
+        })
+        return grid
         
     
     def configure_optimizers(self):
@@ -197,3 +236,33 @@ class TrainableDDPMbyClass(L.LightningModule):
         )
         
         return [optimizer], [scheduler]
+    
+    def forward(
+        self,
+        batch_size: int = 1,
+        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
+        num_inference_steps: int = 1000,
+        output_type: Optional[str] = "pil",
+        return_dict: bool = True,
+        mean = 0.5,
+        std = 0.5,
+        callback=None,
+        class_labels: List[int]=None,
+        guidance_scale = 7.5,
+        guidance_rescale = 0.0,
+    ) -> Union[ImagePipelineOutput, Tuple]:
+
+        return self.pipe(
+            batch_size=batch_size,
+            generator=generator,
+            num_inference_steps=num_inference_steps,
+            output_type=output_type,
+            return_dict=return_dict,
+            mean=mean,
+            std=std,
+            callback=callback,
+            class_labels=class_labels,
+            guidance_scale=guidance_scale,
+            guidance_rescale=guidance_rescale,
+        )
+        
