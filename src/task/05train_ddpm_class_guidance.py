@@ -44,6 +44,9 @@ data = DiffusionData(
 
 model = TrainableDDPMbyClass.from_config(opts.unet_config, opts.scheduler_config, opts)
 
+if opts.reuse:
+    model.load_from_checkpoint(opts.ckpt)
+
 wandblogger = WandbLogger(
     name=f"{o_d}_{thisfile}_{opts.ps}", 
     save_dir=opts.log_dir,

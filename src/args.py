@@ -22,7 +22,7 @@ parser.add_argument("--data_root", type=str, default="../../data/ACDC/quadra/", 
 
 # Checkpoint and Logging
 parser.add_argument("--ckpt", type=str, default=None, help="Path to checkpoint file")
-parser.add_argument("--ckpt_dir", type=str, default="../../ckpt/", help="Directory to save checkpoints")
+parser.add_argument("--ckpt_dir", type=str, default="../../ckpt/prim/", help="Directory to save checkpoints")
 parser.add_argument("--log_dir", type=str, default="../../logs/", help="Directory to save logs")
 parser.add_argument("--log_step", type=int, default=10, help="Logging step interval")
 parser.add_argument("--inference_step", type=int, default=50, help="Logging inference interval")
@@ -44,7 +44,7 @@ parser.add_argument("--ps", type=str, default="postscript", help="Postscript")
 parser.add_argument("--fast", action="store_true", help="Use fast mode")
 # parser.add_argument("--save_training_output", action="store_true", help="Save training output")
 # parser.add_argument("--frozen", action="store_true", help="Freeze model layers")
-# parser.add_argument("--reuse", action="store_true", help="Reuse previous session")
+parser.add_argument("--reuse", action="store_true", help="Reuse previous session")
 
 parser.add_argument("--p_uncond", type=float, default=0.1, help="Probability of unconditional sampling")
 parser.add_argument("--p_uncond_label", type=int, default=0, help="Probability of unconditional label sampling")
