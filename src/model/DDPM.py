@@ -67,7 +67,7 @@ class TrainableDDPM(L.LightningModule):
     def training_step(self, batch, batch_idx):
         images = batch[0]
         noise = torch.randn_like(images)
-        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device, generator=self.g)
+        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device, )
         noisy_images = self.scheduler.add_noise(images, noise, steps)
         residual = self.unet(noisy_images, steps).sample
         loss = torch.nn.functional.mse_loss(residual, noise)
@@ -83,7 +83,7 @@ class TrainableDDPM(L.LightningModule):
         images = batch[0]
         noise = torch.randn_like(images)
         # TODO: fix timesteps for validation for each epoch: 
-        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device) # TODO
+        steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device, generator=self.g) # TODO
         # steps = f(batch_idx)
         noisy_images = self.scheduler.add_noise(images, noise, steps)
         residual = self.unet(noisy_images, steps).sample
