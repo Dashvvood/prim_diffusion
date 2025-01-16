@@ -146,6 +146,7 @@ class TrainableDDPMbyClass(L.LightningModule):
         self.scheduler = scheduler
         self.opts = opts
         self.pipe = DDPMPipelineV2(unet, scheduler)
+        self.unet.config["sample_size"] = opts.img_size
         
     @classmethod
     def from_config(cls, unet_config, scheduler_config, opts=None):
