@@ -13,6 +13,8 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 
+import lightning as L
+
 class QuadraACDCDataset(Dataset):
     def __init__(self, root_dir, h5data="acdc_quadra.h5", metadata="quadra_per_slice.csv", transform=None):
         self.root_dir = root_dir
