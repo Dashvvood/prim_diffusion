@@ -25,6 +25,7 @@ parser.add_argument("--ckpt", type=str, default=None, help="Path to checkpoint f
 parser.add_argument("--ckpt_dir", type=str, default="../../ckpt/", help="Directory to save checkpoints")
 parser.add_argument("--log_dir", type=str, default="../../logs/", help="Directory to save logs")
 parser.add_argument("--log_step", type=int, default=10, help="Logging step interval")
+parser.add_argument("--inference_step", type=int, default=50, help="Logging inference interval")
 parser.add_argument("--config_dir", type=str, default="../../config/", help="Directory to save configs")
 
 # Learning Rate and Optimizer
