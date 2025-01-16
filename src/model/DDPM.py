@@ -185,7 +185,7 @@ class TrainableDDPMbyClass(L.LightningModule):
         noisy_images = self.scheduler.add_noise(images, noise, steps)
         residual = self.unet(sample=noisy_images, timestep=steps, class_labels=class_labels).sample
         loss = torch.nn.functional.mse_loss(residual, noise)
-        self.log("train_loss", loss, prog_bar=True)
+        self.log("train_loss", loss, prog_bar=True, batch_size=images.size(0))
         return loss
     
     @torch.no_grad()
@@ -205,20 +205,19 @@ class TrainableDDPMbyClass(L.LightningModule):
         noisy_images = self.scheduler.add_noise(images, noise, steps)
         residual = self.unet(sample=noisy_images, timestep=steps, class_labels=class_labels).sample
         loss = torch.nn.functional.mse_loss(residual, noise)
-        self.log("val_loss", loss, prog_bar=True)
+        self.log("val_loss", loss, prog_bar=True, batch_size=images.size(0))
         return loss
     
     
     @torch.no_grad()
     def on_validation_epoch_end(self):
         self.pipe = self.pipe.to(self.device)  # make sure use gpu
+        self.pipe.eval()
         batch_size = min(8, self.opts.batch_size)
         images = self.pipe(batch_size=batch_size, num_inference_steps=1000, generator=self.g, output_type="tensor")[0]
         images = images[:, 1:, :, :]
         grid = make_grid(images, nrow=batch_size)
-        self.log({
-            "Sampling": wandb.Image(grid, caption=f"Epoch {self.current_epoch}"), 
-        })
+        self.log("Sampling", wandb.Image(grid, caption=f"Epoch {self.current_epoch}"), )
         return grid
         
     
