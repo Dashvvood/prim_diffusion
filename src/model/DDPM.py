@@ -26,6 +26,7 @@ import wandb
 
 from .pipeline_ddpm import DDPMPipelineV2
 
+from diffusers import DDPMPipeline
 
 class TrainableDDPM(L.LightningModule):
     def __init__(self, unet, scheduler, opts=None):
@@ -147,7 +148,7 @@ class TrainableDDPMbyClass(L.LightningModule):
         self.opts = opts
         self.pipe = DDPMPipelineV2(unet, scheduler)
         self.unet.config["sample_size"] = opts.img_size
-        
+    
     @classmethod
     def from_config(cls, unet_config, scheduler_config, opts=None):
         if isinstance(unet_config, str):
@@ -179,7 +180,7 @@ class TrainableDDPMbyClass(L.LightningModule):
         class_labels = self._get_batch_class_idx_from_meta(batch[1]).to(self.device)
         
         random_uncond_mask = (torch.rand(size=(len(images),))<=self.opts.p_uncond)
-        class_labels[random_uncond_mask] = self.opts.p_uncond_label
+        class_labels[random_uncond_mask] = self.opts.p_uncond_label  # dropout class labels
         
         noise = torch.randn_like(images)
         steps = torch.randint(self.scheduler.config.num_train_timesteps, (images.size(0),), device=self.device, )

@@ -18,5 +18,17 @@ CLASS2IDX = {
 # TODO: guidance weight 
 IDX2CLASS = {v: k for k, v in CLASS2IDX.items()}
 
+
+# 1. 5 + 1 classes
+# 2. 2 + 1 phases
+# 3. slice_position: float(0, 1) -> Linear Projection( embedding)
+# sum all
+
+# embed_ = 100
+
+# [:50] = DCM ?
+# [50:] = Phase?
+
+
 # TODO
 VAL_SEED = 42
