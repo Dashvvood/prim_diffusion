@@ -88,15 +88,15 @@ for k in range(0, opts.total_num, opts.batch_size):
     batch_size = min(opts.total_num - k, opts.batch_size)
     
     class_labels = torch.IntTensor([(class_label + i + 1) % num_class_embeds for i in range(batch_size)]).to("cuda")
-    
-    images = pipe(
-        batch_size=batch_size,
-        num_inference_steps=opts.num_inference_steps,
-        output_type=opts.output_type,
-        mean=opts.mean, # 0.5
-        std=opts.std,  # 0.5
-        class_labels=class_labels
-    ).images
+    with torch.no_grad():
+        images = pipe(
+            batch_size=batch_size,
+            num_inference_steps=opts.num_inference_steps,
+            output_type=opts.output_type,
+            mean=opts.mean, # 0.5
+            std=opts.std,  # 0.5
+            class_labels=class_labels
+        ).images
 
     for i, raw in enumerate(images):
         class_label = class_labels[i].item()
