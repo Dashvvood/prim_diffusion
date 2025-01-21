@@ -113,7 +113,7 @@ class TrainableShapeDM(L.LightningModule, ShapeDM):
         L.LightningModule.__init__(self)
         ShapeDM.__init__(self, unet=unet, scheduler=scheduler)
         # self.save_hyperparameters(ignore=["ipython_dir"])
-        # self.save_hyperparameters("opts")
+        self.save_hyperparameters()
         self.opts = opts
 
     
