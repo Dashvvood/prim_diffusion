@@ -60,11 +60,14 @@ class ShapeDM(DiffusionPipeline):
         if class_labels is None:
             # 0 means random generation, w/o class conditioning
             class_condition = torch.zeros(batch_size, dtype=torch.long, device=self.device) 
-        else:
-            # double size for uncond and cond
-            class_condition = torch.zeros(batch_size * 2, dtype=torch.long, device=self.device) 
+        elif isinstance(class_labels, list):
+            class_condition = torch.zeros(batch_size * 2, dtype=torch.long, device=self.device)
             class_condition[batch_size:] = torch.tensor(class_labels, dtype=torch.long, device=self.device)
-
+        elif isinstance(class_labels, torch.Tensor):
+            class_condition = torch.zeros(batch_size * 2, dtype=torch.long, device=self.device)
+            class_condition[batch_size:] = class_labels.clone().detach().to(dtype=torch.long, device=self.device)
+        else:
+            raise ValueError("Invalid class_labels type")
 
         # set step values
         self.scheduler.set_timesteps(num_inference_steps)

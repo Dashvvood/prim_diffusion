@@ -12,8 +12,8 @@ o_d = motti.o_d()
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from model.pipeline_ddpm import DDPMPipelineV2
-from model.pipeline_ddim import DDIMPipelineV2
+
+from model.ShapeDM import ShapeDM
 from diffusers import UNet2DModel, DDPMScheduler, DDIMScheduler, DDIMPipeline, DDPMPipeline
 from PIL import Image
 from tqdm import tqdm
@@ -74,10 +74,11 @@ ddpm_scheduler = DDPMScheduler.from_config(scheduler_config)
 
 
 if opts.ddim:
-    ddim_scheduler = DDIMScheduler.from_config(scheduler_config)
-    pipe = DDIMPipelineV2(unet, ddim_scheduler).to("cuda")
+    raise NotImplementedError("DDIM not implemented")
+    # ddim_scheduler = DDIMScheduler.from_config(scheduler_config)
+    # pipe = DDIMPipelineV2(unet, ddim_scheduler).to("cuda")
 else:
-    pipe = DDPMPipelineV2(unet, ddpm_scheduler).to("cuda")
+    pipe = ShapeDM(unet=unet, scheduler=ddpm_scheduler).to("cuda")
 
 
 num_class_embeds = unet.config["num_class_embeds"]
