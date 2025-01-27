@@ -16,7 +16,7 @@ from torch.utils.data import Dataset, DataLoader
 import lightning as L
 
 class QuadraACDCDataset(Dataset):
-    def __init__(self, root_dir, h5data="acdc_quadra.h5", metadata="quadra_per_slice.csv", transform=None):
+    def __init__(self, root_dir="../../data/ACDC/quadra/", h5data="acdc_quadra.h5", metadata="quadra_per_slice.csv", transform=None):
         self.root_dir = root_dir
         self.data = h5py.File(os.path.join(root_dir, h5data), 'r')
         self.meta = pd.read_csv(os.path.join(root_dir, metadata))
@@ -152,8 +152,6 @@ class ACDCDataset(Dataset):
         return None
 
 
-
-
 class DiffusionData(L.LightningDataModule):
     def __init__(
         self, 
@@ -222,4 +220,3 @@ class DiffusionData(L.LightningDataModule):
             num_workers=self.opts.num_workers,
             collate_fn=QuadraACDCDataset.collate_fn,
         )
-
