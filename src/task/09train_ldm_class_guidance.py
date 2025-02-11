@@ -28,10 +28,11 @@ o_d = motti.o_d()
 from args import opts
 
 import lightning as L
-from model import ShapeDM, TrainableShapeDM
+from model import ShapeLDM, TrainableShapeLDM
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.callbacks import Callback, ModelCheckpoint
 from dataset.ACDC import DiffusionData
+
 
 data = DiffusionData(
     data_dir=opts.data_root, 
@@ -42,10 +43,11 @@ data = DiffusionData(
     opts=opts
 )
 
+
 # from model.DDPM import TrainableDDPMbyClass
 # model = TrainableDDPMbyClass.from_config(opts.unet_config, opts.scheduler_config, opts)
 
-model = ShapeDM.from_config(opts.unet_config, opts.scheduler_config, opts)
+model = TrainableShapeLDM.from_config(config_dir=opts.config_dir, opts=opts)
 
 if opts.reuse:
     model.load_from_checkpoint(opts.ckpt)

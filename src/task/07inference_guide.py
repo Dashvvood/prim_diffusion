@@ -1,8 +1,15 @@
 """
-python 03inference_ddpm.py --ckpt ../../ckpt/prim/20241127-152255/epoch\=80-step\=2349.ckpt \
---unet_config ../../config/ddpm_small/unet --scheduler_config ../../config/ddpm_small/scheduler \
---batch_size 256 --total_num 1024 --num_inference_steps 1000 --mean 0.5 --std 0.5 \
---output_type numpy --output_dir ../../output/
+Usage:
+CUDA_VISIBLE_DEVICES=0 python 07inference_guide.py \
+    --ckpt_path ../../ckpt/prim/20250116-141853/epoch=283-step=8236.ckpt \
+    --unet_config ../../config/ddpm_medium/unet_class \
+    --scheduler_config ../../config/ddpm_medium/scheduler \
+    --batch_size 128 \
+    --total_num 1024 \
+    --num_inference_steps 1000 \
+    --output_type numpy \
+    --output_dir ../../output/ \
+    --guidance_scale 1
 """
 import os
 import motti
@@ -35,6 +42,7 @@ def local_args():
     parser.add_argument("--output_type", type=str, default="pil")
     parser.add_argument("--output_dir", type=str, default=".")
     parser.add_argument("--ddim", action='store_true', default=False)
+    parser.add_argument("--guidance_scale", type=float, default=7.5)
     args, missing = parser.parse_known_args()
     print(f"Missing args: {missing}")
     return args
@@ -74,9 +82,9 @@ ddpm_scheduler = DDPMScheduler.from_config(scheduler_config)
 
 
 if opts.ddim:
-    raise NotImplementedError("DDIM not implemented")
-    # ddim_scheduler = DDIMScheduler.from_config(scheduler_config)
-    # pipe = DDIMPipelineV2(unet, ddim_scheduler).to("cuda")
+    # raise NotImplementedError("DDIM not implemented")
+    ddim_scheduler = DDIMScheduler.from_config(scheduler_config)
+    pipe = ShapeDM(unet=unet, scheduler=ddim_scheduler).to("cuda")
 else:
     pipe = ShapeDM(unet=unet, scheduler=ddpm_scheduler).to("cuda")
 
@@ -95,7 +103,8 @@ for k in range(0, opts.total_num, opts.batch_size):
             output_type=opts.output_type,
             mean=opts.mean, # 0.5
             std=opts.std,  # 0.5
-            class_labels=class_labels
+            class_labels=class_labels,
+            guidance_scale=opts.guidance_scale,
         ).images
 
     for i, raw in enumerate(images):
