@@ -31,6 +31,12 @@ class QuadraACDCDataset(Dataset):
         slice = self.data[slice_path][:].astype(np.float32)
         return self.transform(slice), row
     
+    def get_item_by_id(self, id):
+        row = self.meta[self.meta.ID == id].iloc[0]
+        slice_path = row.H5path
+        slice = self.data[slice_path][:].astype(np.float32)
+        return self.transform(slice), row
+    
     def get_slice(self, idx):
         row = self.meta.iloc[idx]
         slice_path = row.H5path

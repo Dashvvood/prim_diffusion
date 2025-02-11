@@ -172,3 +172,6 @@ output/
 
 model/**
 !model/*.py
+*.txt
+*.safetensors
+src/model/vae
