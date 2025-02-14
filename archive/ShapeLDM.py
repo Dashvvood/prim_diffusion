@@ -24,43 +24,17 @@ from torchvision.utils import make_grid
 
 class ShapeLDM(DiffusionPipeline):
     def __init__(self, vae, unet, scheduler):
-        super().__init__()
+        super(ShapeLDM, self).__init__()
         self.register_modules(vae=vae, unet=unet, scheduler=scheduler)
 
         self.vae_scale_factor = 2 ** (len(self.vae.config.block_out_channels) - 1) if getattr(self, "vae", None) else 8
         self.image_processor = VaeImageProcessor(vae_scale_factor=self.vae_scale_factor)
-    
-    
-    @classmethod
-    def from_config(cls, config_dir):
-        unet_dir = os.path.join(config_dir, "unet")
-        scheduler_dir = os.path.join(config_dir, "scheduler")
-        
-        unet_config = UNet2DModel.load_config(unet_dir)
-        unet = UNet2DModel.from_config(unet_config)
-        
-        scheduler_config = DDPMScheduler.load_config(scheduler_dir)
-        scheduler = DDPMScheduler.from_config(scheduler_config)
-        
-        vae = AutoencoderKL.from_pretrained(os.path.join(config_dir, "vae"))
-        return cls(vae=vae, unet=unet, scheduler=scheduler)
-    
-    
-    def load_state_from_ckpt(self, ckpt_path):
-        ckpt = torch.load(ckpt_path, map_location="cpu")
-        d = {}
-        for k, v in ckpt["state_dict"].items():
-            new_k = k.split('.', 1)[1]
-            d[new_k] = v
-        return self.unet.load_state_dict(d)
-    
-    
+
     @torch.no_grad()
     def vae_encode(self, x: torch.Tensor):
         posterior = self.vae.encode(x).latent_dist
         z = posterior.sample() * self.vae.config.scaling_factor
         return z
-    
     
     @torch.no_grad()
     def vae_decode(self, z: torch.Tensor):
@@ -68,15 +42,12 @@ class ShapeLDM(DiffusionPipeline):
         x = self.vae.decode(z, return_dict=False)[0]
         return x
     
-    
     def prepare_latents(self, batch_size, num_channels_latents, height, width, dtype, device, generator, latents=None):
         shape = (
             batch_size,
             num_channels_latents,
-            height,
-            width,
-            # int(height) // self.vae_scale_factor,
-            # int(width) // self.vae_scale_factor,
+            int(height) // self.vae_scale_factor,
+            int(width) // self.vae_scale_factor,
         )
         if isinstance(generator, list) and len(generator) != batch_size:
             raise ValueError(
@@ -92,7 +63,6 @@ class ShapeLDM(DiffusionPipeline):
         # scale the initial noise by the standard deviation required by the scheduler
         latents = latents * self.scheduler.init_noise_sigma
         return latents
-    
     
     def __call__(
         self,
@@ -177,19 +147,13 @@ class ShapeLDM(DiffusionPipeline):
 
         return ImagePipelineOutput(images=image)
 
-
-class TrainableShapeLDM(L.LightningModule):
+class TrainableShapeLDM(L.LightningModule, ShapeLDM):
     def __init__(self, vae, unet, scheduler, opts=None):
-        super().__init__()
-        self.save_hyperparameters("opts")
-        self.unet = unet
-        self.scheduler = scheduler
-        self.vae = vae
+        L.LightningModule.__init__(self)
+        ShapeLDM.__init__(self, vae=vae, unet=unet, scheduler=scheduler)
+        # self.save_hyperparameters(ignore=["ipython_dir"])
+        self.save_hyperparameters(ignore=["ipython_dir"])
         self.opts = opts
-        self._freeze_submodule(self.vae)
-        self.vae.eval()
-        self.pipe = ShapeLDM(vae=self.vae, unet=self.unet, scheduler=self.scheduler)
-
     
     @classmethod
     def from_config(cls, config_dir, opts=None):
@@ -205,25 +169,15 @@ class TrainableShapeLDM(L.LightningModule):
         vae = AutoencoderKL.from_pretrained(os.path.join(config_dir, "vae"))
         return cls(vae=vae, unet=unet, scheduler=scheduler, opts=opts)
 
-
-    def load_state_from_ckpt(self, ckpt_path):
-        if os.path.isfile(ckpt_path):
-            ckpt = torch.load(ckpt_path, map_location="cpu")
-        else:
-            ckpt = ckpt_path
-        return self.load_state_dict(ckpt["state_dict"])
-    
-    
     def _get_batch_class_idx_from_meta(self, meta):
         res = []
         for i, row in meta.iterrows():
             res.append(CLASS2IDX[(row.Group, row.Phase)])
         return torch.LongTensor(res)
     
-    
     def training_step(self, batch, batch_idx):
         images = batch[0][:, 1:4, :, :]
-        latents = self.pipe.vae_encode(images)
+        latents = self.vae_encode(images)
         class_labels = self._get_batch_class_idx_from_meta(batch[1]).to(self.device)
         
         random_uncond_mask = (torch.rand(size=(len(latents),))<=self.opts.p_uncond)
@@ -237,15 +191,13 @@ class TrainableShapeLDM(L.LightningModule):
         self.log("train_loss", loss, prog_bar=True, batch_size=latents.size(0))
         return loss
     
-    
     @torch.no_grad()
     def on_validation_epoch_start(self):
         self.g = torch.Generator(self.device).manual_seed(VAL_SEED)
         
-        
     def validation_step(self, batch, batch_idx):
         images = batch[0][:, 1:4, :, :]
-        latents = self.pipe.vae_encode(images)
+        latents = self.vae_encode(images)
         class_labels = self._get_batch_class_idx_from_meta(batch[1]).to(self.device)
         
         random_uncond_mask = (torch.rand(size=(len(latents),))<=self.opts.p_uncond)
@@ -260,14 +212,15 @@ class TrainableShapeLDM(L.LightningModule):
         self.log("val_loss", loss, prog_bar=True, batch_size=latents.size(0))
         return loss
     
-    
     @torch.no_grad()
     def on_validation_epoch_end(self):
         if (self.current_epoch + 1) % self.opts.inference_step != 0:
             return None
         else:
+            self.pipe = self.pipe.to(self.device)  # make sure use gpu
             batch_size = min(8, self.opts.batch_size)
-            images = self.pipe(batch_size=batch_size, num_inference_steps=1000, generator=self.g, output_type="tensor")[0]
+            latents = self.pipe(batch_size=batch_size, num_inference_steps=1000, generator=self.g, output_type="tensor")[0]
+            images = self.vae_decode(latents)
             # images = images[:, 1:, :, :]
             grid = make_grid(images, nrow=batch_size)
             self.logger.experiment.log({
@@ -275,13 +228,14 @@ class TrainableShapeLDM(L.LightningModule):
             })
             return grid
         
-        
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(
-            self.unet.parameters(), 
-            **self.opts.optimizer
+            self.parameters(), 
+            lr=self.opts.lr,
+            betas=[0.9, 0.999],
+            weight_decay=1e-2,
         )
-
+        
         scheduler = get_cosine_schedule_with_warmup(
             optimizer=optimizer,
             num_warmup_steps=self.opts.warmup_epochs,
@@ -289,7 +243,3 @@ class TrainableShapeLDM(L.LightningModule):
         )
         
         return [optimizer], [scheduler]
-
-    def _freeze_submodule(self, submodule):
-        for param in submodule.parameters():
-            param.requires_grad = False

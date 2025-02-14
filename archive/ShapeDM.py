@@ -107,37 +107,16 @@ class ShapeDM(DiffusionPipeline):
 
         return ImagePipelineOutput(images=image)
 
-    @classmethod
-    def from_config(cls, config_dir):
-        unet_dir = os.path.join(config_dir, "unet")
-        scheduler_dir = os.path.join(config_dir, "scheduler")
-        
-        unet_config = UNet2DModel.load_config(unet_dir)
-        unet = UNet2DModel.from_config(unet_config)
-        
-        scheduler_config = DDPMScheduler.load_config(scheduler_dir)
-        scheduler = DDPMScheduler.from_config(scheduler_config)
-        
-        return cls(unet=unet, scheduler=scheduler)
 
-    def load_state_from_ckpt(self, ckpt_path):
-        ckpt = torch.load(ckpt_path, map_location="cpu")
-        d = {}
-        for k, v in ckpt["state_dict"].items():
-            new_k = k.split('.', 1)[1]
-            d[new_k] = v
-        return self.unet.load_state_dict(d)
-
-
-class TrainableShapeDM(L.LightningModule):
+class TrainableShapeDM(L.LightningModule, ShapeDM):
     def __init__(self, unet, scheduler, opts=None):
-        super().__init__()
-        self.save_hyperparameters("opts")
-        self.unet = unet
-        self.scheduler = scheduler
+        L.LightningModule.__init__(self)
+        ShapeDM.__init__(self, unet=unet, scheduler=scheduler)
+        # self.save_hyperparameters(ignore=["ipython_dir"])
+        self.save_hyperparameters()
         self.opts = opts
-        self.pipe = ShapeDM(unet=self.unet, scheduler=self.scheduler)
 
+    
     @classmethod
     def from_config(cls, config_dir, opts=None):
         unet_dir = os.path.join(config_dir, "unet")
@@ -151,14 +130,6 @@ class TrainableShapeDM(L.LightningModule):
         
         return cls(unet=unet, scheduler=scheduler, opts=opts)
 
-    
-    def load_state_from_ckpt(self, ckpt_path):
-        if os.path.isfile(ckpt_path):
-            ckpt = torch.load(ckpt_path, map_location="cpu")
-        else:
-            ckpt = ckpt_path
-        return self.load_state_dict(ckpt["state_dict"])
-    
     
     def _get_batch_class_idx_from_meta(self, meta):
         res = []
@@ -191,7 +162,7 @@ class TrainableShapeDM(L.LightningModule):
     def validation_step(self, batch, batch_idx):
         images = batch[0]
         class_labels = self._get_batch_class_idx_from_meta(batch[1]).to(self.device)
-
+        
         random_uncond_mask = (torch.rand(size=(len(images),))<=self.opts.p_uncond)
         class_labels[random_uncond_mask] = self.opts.p_uncond_label
         
@@ -201,7 +172,6 @@ class TrainableShapeDM(L.LightningModule):
         noisy_images = self.scheduler.add_noise(images, noise, steps)
         residual = self.unet(sample=noisy_images, timestep=steps, class_labels=class_labels).sample
         loss = torch.nn.functional.mse_loss(residual, noise)
-        
         self.log("val_loss", loss, prog_bar=True, batch_size=images.size(0))
         return loss
     
@@ -211,8 +181,7 @@ class TrainableShapeDM(L.LightningModule):
         if (self.current_epoch + 1) % self.opts.inference_step != 0:
             return None
         else:
-            # pipe = ShapeDM(unet=self.unet, scheduler=self.scheduler).to(self.device)
-            self.pipe = self.pipe.to(self.device) # make sure the pipe is on the same device as the model
+            self.pipe = self.pipe.to(self.device)  # make sure use gpu
             batch_size = min(8, self.opts.batch_size)
             images = self.pipe(batch_size=batch_size, num_inference_steps=1000, generator=self.g, output_type="tensor")[0]
             images = images[:, 1:, :, :]
@@ -221,41 +190,20 @@ class TrainableShapeDM(L.LightningModule):
                 "Sampling": wandb.Image(grid, caption=f"Epoch {self.current_epoch}"), 
             })
             return grid
-
+        
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(
             self.parameters(), 
-            **self.opts.optimizer
+            lr=self.opts.lr,
+            betas=[0.9, 0.999],
+            weight_decay=1e-2,
         )
-
+        
         scheduler = get_cosine_schedule_with_warmup(
             optimizer=optimizer,
             num_warmup_steps=self.opts.warmup_epochs,
             num_training_steps=self.opts.max_epochs,
         )
-
+        
         return [optimizer], [scheduler]
-
-
-class VanillaTrainableShapeDM(L.LightningModule):
-    def __init__(self, unet, scheduler, opts=None):
-        super().__init__()
-        self.save_hyperparameters("opts")
-        self.unet = unet
-        self.scheduler = scheduler
-        self.opts = opts
-
-
-    @classmethod
-    def from_config(cls, config_dir, opts=None):
-        unet_dir = os.path.join(config_dir, "unet")
-        scheduler_dir = os.path.join(config_dir, "scheduler")
-        
-        unet_config = UNet2DModel.load_config(unet_dir)
-        unet = UNet2DModel.from_config(unet_config)
-        
-        scheduler_config = DDPMScheduler.load_config(scheduler_dir)
-        scheduler = DDPMScheduler.from_config(scheduler_config)
-        
-        return cls(unet=unet, scheduler=scheduler, opts=opts)
