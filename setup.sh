@@ -1,6 +1,9 @@
 #!/bin/bash
 
-mkdir ckpt data doc logs misc
+## download the ACDC dataset
+ACDC_DOWNLOAD_LINK=https://humanheart-project.creatis.insa-lyon.fr/database/api/v1/collection/637218c173e9f0047faa00fb/download
+wget $ACDC_DOWNLOAD_LINK -O acdc.zip
+mkdir data
+unzip acdc.zip -d data/
 
-CUDA_VISIBLE_DEVICES=1 python 05train_ddpm_class_guidance.py --unet_config ../../config/ddpm_medium/unet_class/ --scheduler_config ../../config/ddpm_medium/scheduler/ --batch_size 16 --warmup_epochs 20 --max_epochs 200 --num_workers 8 --device_num 1  --lr 1e-5 
---img_size 64 --project prim  --log_step 5  --p_uncond 0.5 --ps test_small  
+
