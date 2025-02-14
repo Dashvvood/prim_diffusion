@@ -38,3 +38,9 @@ train.to_csv(os.path.join(input_dir, input_filename + "_train.csv"), index=False
 val.to_csv(os.path.join(input_dir, input_filename + "_val.csv"), index=False)
 
 print(f"Output files: {input_filename}_train.csv and {input_filename}_val.csv")
+
+# Only save the first 128 data rows of the train file
+train_first_128 = train.head(128)
+train_first_128.to_csv(os.path.join(input_dir, input_filename + "_train_first_128.csv"), index=False)
+
+print(f"Output file: {input_filename}_train_fast.csv")
