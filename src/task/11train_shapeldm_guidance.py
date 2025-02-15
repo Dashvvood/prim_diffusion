@@ -38,6 +38,7 @@ trainer = L.Trainer(
     max_epochs=opts.max_epochs,
     accelerator="gpu",
     devices=opts.device_num,
+    strategy=opts.strategy,
     fast_dev_run=opts.fast,
     logger=wandblogger,
     accumulate_grad_batches=opts.accumulate_grad_batches,

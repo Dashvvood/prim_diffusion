@@ -10,6 +10,7 @@ ckpt_path: ~
 batch_size: 256
 num_workers: 8
 device_num: 1
+strategy: ddp
 
 img_size: 128
 
