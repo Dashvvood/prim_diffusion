@@ -1,0 +1,43 @@
+project: prim
+model: ../../config/model/dm_medium_128/
+ckpt_dir: ../../ckpt/prim/
+
+
+fast: false
+resume: false
+ckpt_path: ~
+
+batch_size: 16
+num_workers: 8
+device_num: 2
+strategy: ddp
+img_size: 128
+
+log_step: 5
+log_dir: ../../logs/
+inference_step: 50
+
+ps: debug
+p_uncond: 0.5
+p_uncond_label: 0
+
+
+accumulate_grad_batches: 1
+
+optimizer:
+  lr: 1e-4
+  betas: [0.9, 0.999]
+  weight_decay: 1e-2
+
+# lr scheduler
+warmup_epochs: 50
+max_epochs: 500
+from_epoch: 0
+
+# data
+data:
+  data_dir: ../../data/ACDC/quadra/
+  h5data: acdc_quadra.h5
+  train_metadata: quadra_per_slice_train_train.csv
+  val_metadata: quadra_per_slice_train_val.csv
+  test_metadata: quadra_per_slice_test.csv

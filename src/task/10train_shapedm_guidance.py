@@ -36,6 +36,7 @@ checkpoint_callback = ModelCheckpoint(
 trainer = L.Trainer(
     max_epochs=opts.max_epochs,
     accelerator="gpu",
+    strategy=opts.strategy,
     devices=opts.device_num,
     fast_dev_run=opts.fast,
     logger=wandblogger,
