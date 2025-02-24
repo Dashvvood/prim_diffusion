@@ -92,9 +92,9 @@ class ShapeDM(DiffusionPipeline):
                 callback(image, t)
             
         # image = (image * 0.5 + 0.5).clamp(0, 1) # version originale 
-        image = (image * std + mean).clamp(0, 1) # version changee
+        image = (image * std + mean).clamp(0, 1) # version changee 
         
-        if output_type == "tensor":
+        if output_type == "tensor": 
             return (image.cpu(), )
         
         image = image.cpu().permute(0, 2, 3, 1).numpy()
@@ -215,7 +215,7 @@ class TrainableShapeDM(L.LightningModule):
             self.pipe = self.pipe.to(self.device) # make sure the pipe is on the same device as the model
             batch_size = min(8, self.opts.batch_size)
             images = self.pipe(batch_size=batch_size, num_inference_steps=1000, generator=self.g, output_type="tensor")[0]
-            images = images[:, 1:, :, :]
+            images = images[:, 1:4, :, :]
             grid = make_grid(images, nrow=batch_size)
             self.logger.experiment.log({
                 "Sampling": wandb.Image(grid, caption=f"Epoch {self.current_epoch}"), 

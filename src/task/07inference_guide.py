@@ -31,8 +31,7 @@ import json
 def local_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ckpt_path", type=str, default=".")
-    parser.add_argument("--unet_config", type=str, default=".")
-    parser.add_argument("--scheduler_config", type=str, default=".")
+    parser.add_argument("--config_dir", type=str, default=".")
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--total_num", type=int, default=10)
     parser.add_argument("--num_inference_steps", type=int, default=50)
@@ -67,29 +66,16 @@ for i in range(4):
 with open(os.path.join(output_dir, "args.json"), "w") as f:
     json.dump(vars(opts), f, indent=4)
 
-ckpt = torch.load(opts.ckpt_path, map_location="cpu")
-d = {}
-for k, v in ckpt["state_dict"].items():
-    new_k = k.split('.', 1)[1]
-    d[new_k] = v
-
-unet_config = UNet2DModel.load_config(opts.unet_config)
-unet = UNet2DModel.from_config(unet_config)
-unet.load_state_dict(d)
-
-scheduler_config = DDPMScheduler.load_config(opts.scheduler_config)
-ddpm_scheduler = DDPMScheduler.from_config(scheduler_config)
-
-
+pipe = ShapeDM.from_config(config_dir=opts.config_dir)
+pipe.load_state_from_ckpt(opts.ckpt_path)
 if opts.ddim:
     # raise NotImplementedError("DDIM not implemented")
-    ddim_scheduler = DDIMScheduler.from_config(scheduler_config)
-    pipe = ShapeDM(unet=unet, scheduler=ddim_scheduler).to("cuda")
-else:
-    pipe = ShapeDM(unet=unet, scheduler=ddpm_scheduler).to("cuda")
+    ddim_scheduler = DDIMScheduler.from_config(pipe.scheduler.config)
+    pipe.scheduler = ddim_scheduler
+pipe = pipe.to("cuda")
 
 
-num_class_embeds = unet.config["num_class_embeds"]
+num_class_embeds = pipe.unet.config["num_class_embeds"]
 class_label = -1
 
 for k in range(0, opts.total_num, opts.batch_size):

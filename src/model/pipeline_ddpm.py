@@ -130,7 +130,7 @@ class DDPMPipelineV2(DDPMPipeline):
         # image = (image * 0.5 + 0.5).clamp(0, 1) # version originale 
         image = (image * std + mean).clamp(0, 1) # version changee
         
-        if output_type == "tensor":
+        if output_type == "tensor":  # default is numpy array
             return (image.cpu(), )
         
         image = image.cpu().permute(0, 2, 3, 1).numpy()
