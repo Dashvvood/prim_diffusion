@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import torch
 
 from model.ShapeDM import ShapeDM
+from model.ShapeLDM import ShapeLDM
 from diffusers import UNet2DModel, DDPMScheduler, DDIMScheduler, DDIMPipeline, DDPMPipeline
 from PIL import Image
 from tqdm import tqdm
@@ -41,6 +42,7 @@ def local_args():
     parser.add_argument("--output_type", type=str, default="pil")
     parser.add_argument("--output_dir", type=str, default=".")
     parser.add_argument("--ddim", action='store_true', default=False)
+    parser.add_argument("--latent", action='store_true', default=False)
     parser.add_argument("--guidance_scale", type=float, default=7.5)
     args, missing = parser.parse_known_args()
     print(f"Missing args: {missing}")
@@ -66,7 +68,11 @@ for i in range(4):
 with open(os.path.join(output_dir, "args.json"), "w") as f:
     json.dump(vars(opts), f, indent=4)
 
-pipe = ShapeDM.from_config(config_dir=opts.config_dir)
+if opts.latent:
+    pipe = ShapeLDM.from_config(config_dir=opts.config_dir)
+else:
+    pipe = ShapeDM.from_config(config_dir=opts.config_dir)
+    
 pipe.load_state_from_ckpt(opts.ckpt_path)
 if opts.ddim:
     # raise NotImplementedError("DDIM not implemented")

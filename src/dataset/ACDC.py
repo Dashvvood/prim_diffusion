@@ -21,7 +21,7 @@ class QuadraACDCDataset(Dataset):
         self.data = h5py.File(os.path.join(root_dir, h5data), 'r')
         self.meta = pd.read_csv(os.path.join(root_dir, metadata))
         self.transform = transform if transform is not None else lambda x: x
-        
+
     def __len__(self):
         return len(self.meta)
     
