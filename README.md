@@ -1,4 +1,9 @@
+---
+typora-copy-images-to: ./README.assets
+---
+
 # Prim_diffusion
+
 ## Prepare
 
 1. Clone the repository
@@ -97,16 +102,19 @@ CUDA_VISIBLE_DEVICES=0 python 07inference_guide.py \
    --latent
 ```
 
+---
+
+### Inference samples
+
+**ShapeDM Medium 64**
+
+![exp01](./README.assets/exp01.png)
+
+**Conditional ShapeDM Medium 64**
+
+![exp03](./README.assets/exp03.png)
 
 ---
 
 ---
-
-
-
-
-
-
-
-
 

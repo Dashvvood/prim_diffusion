@@ -1,109 +1,114 @@
-# prim_diffusion
-Telecom Paris Project
+---
+typora-copy-images-to: ./README.assets
+---
 
-Objectives:
-The objectives and perspectives for this project are as follows:
-1. Use diffusion models [1] for generation of binarized images (multiclass masks) of cardiac shapes
-2. Implement the blurring diffusion models of [2]
-3. Combine blurred diffusion models with the VAE framework
+# Prim_diffusion
 
+## 准备工作
 
-## Dataset
+1. 克隆仓库
 
-### ACDC
-ED: End-Diastole（舒张末期）
-ES: End-Systole（收缩末期）
+   ```shell
+   git clone ...
+   cd prim_diffusion
+   mkdir data ckpt output logs
+   ```
 
-**A (Anterior)**：前方，表示病人的前面（朝向病人的脸部）。
+2. 下载数据集：
 
-**P (Posterior)**：后方，表示病人的背面（朝向病人的背部）。
+   ```shell
+   ACDC_DOWNLOAD_LINK=https://humanheart-project.creatis.insa-lyon.fr/database/api/v1/collection/637218c173e9f0047faa00fb/download
+   
+   wget $ACDC_DOWNLOAD_LINK -O acdc.zip
+   mkdir data
+   unzip acdc.zip -d data/ACDC/
+   ```
 
-**L (Left)**：左方，表示病人的左侧。
+3. 预处理数据 -- （转换为 h5 文件格式，划分训练/验证/测试集）
 
-**R (Right)**：右方，表示病人的右侧。
+   ```shell
+   cd src/task
+   python 01preprocess_dataset.py --data_dir ../../data/ACDC/ --output_dir ../../data/ACDC/
+   
+   python 04split_csv_by_ID.py ../../data/ACDC/quadra/quadra_per_slice_train.csv
+   ```
 
-**label**
+4. **（可选）** 下载预训练 VAE（SD3.5-large）模型
 
-| value | class                                 |
-| ----- | ------------------------------------- |
-| 0     | background                            |
-| 1     | Right Ventricle, RV                   |
-| 2     | Left Ventricle, LV                    |
-| 3     | Myocardium of the Left Ventricle, MYO |
+   ```shell
+   cd ../../ # 返回项目根目录
+   VAE_DOWNLOAD_LINK=https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/vae/diffusion_pytorch_model.safetensors?download=true
+   
+   wget $VAE_DOWNLOAD_LINK -O config/vae/diffusion_pytorch_model.safetensors
+   ```
 
-![img](./README.assets/How-Your-Heart-Works-2-scaled.jpg)
+## 训练
 
-**Class**
-- NOR: 
-    - Examination with normal cardiac anatomy and function
-- MINF: 
-    - Patients with a systolic heart failure with infarction
-- DCM: 
-    - Patients with dilated cardiomyopathy have an ejection fraction below 40%, a LV volume greater than 100 mL/m2 and a wall thickness in diastole smaller than 12 mm.
-- HCM:
-    - Patients with hypertrophic cardiomyopathy, i.e. a normal cardiac function (ejection fraction greater than 55%) but with myocardial segments thicker than 15 mm in diastole.
-- ARV
-    - : Patients with abnormal right ventricle have a RV volume greater than 110 mL/m2 for men, and greater than 100 mL/m2 for women , or/and a RV ejection fraction below 40%. 
+### DDPM
 
+```shell
+cd src/task/
 
+# 默认配置
+CUDA_VISIBLE_DEVICES=0 python 10train_shapedm_guidance.py --config ../../config/training/dm_medium.yaml
 
-| 中文名称 | 英文名称         | 缩写 |
-| -------- | ---------------- | ---- |
-| 右心房   | Right Atrium     | RA   |
-| 右心室   | Right Ventricle  | RV   |
-| 左心房   | Left Atrium      | LA   |
-| 左心室   | Left Ventricle   | LV   |
-| 心肌     | Myocardium       | -    |
-| 二尖瓣   | Mitral Valve     | MV   |
-| 三尖瓣   | Tricuspid Valve  | TV   |
-| 主动脉   | Aorta            | -    |
-| 肺动脉   | Pulmonary Artery | PA   |
-| 肺静脉   | Pulmonary Vein   | PV   |
-| 冠状动脉 | Coronary Artery  | CA   |
-| 心包     | Pericardium      | -    |
-| 心房     | Atria            | -    |
-| 心室     | Ventricles       | -    |
+# 命令行覆盖参数：
+CUDA_VISIBLE_DEVICES=0 python 10train_shapedm_guidance.py --config ../../config/training/dm_medium.yaml max_epoches=100 optimizer.lr=0.001
+```
 
+### LDM
 
+```shell
+cd src/task/
 
-## Basic cardiac views
+# 默认配置
+CUDA_VISIBLE_DEVICES=0 python 11train_shapeldm_guidance.py --config ../../config/training/ldm_medium.yaml
 
-- Long Axis VLA, RAO
-- Short axis SA, SAX
-- Four chamber
+# 命令行覆盖参数：
+CUDA_VISIBLE_DEVICES=0 python 11train_shapeldm_guidance.py --config ../../config/training/ldm_medium.yaml max_epoches=100 optimizer.lr=0.001
+```
 
+## 推理
 
+### DDPM
 
-## Appendix
+```shell
+CUDA_VISIBLE_DEVICES=0 python 07inference_guide.py \
+   --ckpt_path XXXX \
+   --config_dir ../../config/model/dm_medium/ \
+   --batch_size 64 \
+   --total_num 1024 \
+   --output_type "numpy" \
+   --guidance_scale 7.5 \
+   --num_inference_steps 1000 \
+   --output_dir ../../output/ \
+```
 
-- [心脏磁共振基本定位](https://www.bilibili.com/video/BV14f4y1j7ea/?vd_source=cf7bd5044042040cb9df7f8c42c5d791)
-- 
+### Latent DM
 
+```shell
+CUDA_VISIBLE_DEVICES=0 python 07inference_guide.py \
+   --ckpt_path XXXX \
+   --config_dir ../../config/model/ldm_large/ \
+   --batch_size 64 \
+   --total_num 1024 \
+   --output_type "numpy" \
+   --guidance_scale 7.5 \
+   --num_inference_steps 1000 \
+   --output_dir ../../output/ \
+   --latent
+```
 
+------
 
+### 推理样例
 
+**ShapeDM Medium 64**
 
+![exp01](./README.assets/exp01.png)
 
+**Conditional ShapeDM Medium 64**
 
+![exp03](./README.assets/exp03.png)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+------
