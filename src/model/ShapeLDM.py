@@ -52,7 +52,7 @@ class ShapeLDM(DiffusionPipeline):
         for k, v in ckpt["state_dict"].items():
             new_k = k.split('.', 1)[1]
             d[new_k] = v
-        return self.unet.load_state_dict(d)
+        return self.unet.load_state_dict(d, strict=False)
     
     
     @torch.no_grad()

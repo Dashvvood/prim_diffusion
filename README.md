@@ -73,17 +73,29 @@ CUDA_VISIBLE_DEVICES=0 python 11train_shapeldm_guidance.py --config ../../config
 
 ```shell
 CUDA_VISIBLE_DEVICES=0 python 07inference_guide.py \
-    --ckpt_path ../../ckpt/prim/XXXXXX.ckpt \
-    --unet_config ../../config/ddpm_medium/unet_class \
-    --scheduler_config ../../config/ddpm_medium/scheduler \
-    --batch_size 128 \
-    --total_num 1024 \
-    --num_inference_steps 1000 \
-    --output_type numpy \
-    --output_dir ../../output/ \
-    --guidance_scale 1
+   --ckpt_path XXXX \
+   --config_dir ../../config/model/dm_medium/ \
+   --batch_size 64 \
+   --total_num 1024 \
+   --output_type "numpy" \
+   --guidance_scale 7.5 \
+   --num_inference_steps 1000 \
+   --output_dir ../../output/ \
 ```
 
+### Latent DM
+```shell
+CUDA_VISIBLE_DEVICES=0 python 07inference_guide.py \
+   --ckpt_path XXXX \
+   --config_dir ../../config/model/ldm_large/ \
+   --batch_size 64 \
+   --total_num 1024 \
+   --output_type "numpy" \
+   --guidance_scale 7.5 \
+   --num_inference_steps 1000 \
+   --output_dir ../../output/ \
+   --latent
+```
 
 
 ---

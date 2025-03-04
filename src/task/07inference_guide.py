@@ -27,6 +27,7 @@ from PIL import Image
 from tqdm import tqdm
 import argparse
 from utils.nms import NMS
+from utils import binarize, closing
 import json
 
 def local_args():
@@ -53,17 +54,17 @@ output_dir = os.path.join(opts.output_dir, o_d)
 os.makedirs(output_dir, exist_ok=True)
 
 raw_output_dir = os.path.join(output_dir, "raw")
-nms_output_dir = os.path.join(output_dir, "nms")
+binary_output_dir = os.path.join(output_dir, "binary")
 os.makedirs(raw_output_dir, exist_ok=True)
-os.makedirs(nms_output_dir, exist_ok=True)
+os.makedirs(binary_output_dir, exist_ok=True)
 
 os.makedirs(os.path.join(raw_output_dir, "123"), exist_ok=True)
-os.makedirs(os.path.join(nms_output_dir, "123"), exist_ok=True)
+os.makedirs(os.path.join(binary_output_dir, "123"), exist_ok=True)
 
 
 for i in range(4):
     os.makedirs(os.path.join(raw_output_dir, str(i)), exist_ok=True)
-    os.makedirs(os.path.join(nms_output_dir, str(i)), exist_ok=True)
+    os.makedirs(os.path.join(binary_output_dir, str(i)), exist_ok=True)
 
 with open(os.path.join(output_dir, "args.json"), "w") as f:
     json.dump(vars(opts), f, indent=4)
@@ -99,20 +100,41 @@ for k in range(0, opts.total_num, opts.batch_size):
             guidance_scale=opts.guidance_scale,
         ).images
 
-    for i, raw in enumerate(images):
-        class_label = class_labels[i].item()
-        
-        im123 = Image.fromarray((raw[..., 1:] * 255).astype(np.uint8))
-        im123.save(os.path.join(raw_output_dir, "123", f"C{class_label}_{k+i}.png"))
-        
-        for j in range(4):
-            im = Image.fromarray((raw[..., j] * 255).astype(np.uint8))
-            im.save(os.path.join(raw_output_dir, str(j), f"C{class_label}_{k+i}.png"))
-        
-        nms = NMS(raw)
-        im123 = Image.fromarray((nms[..., 1:] * 255).astype(np.uint8))
-        im123.save(os.path.join(nms_output_dir, "123", f"C{class_label}_{k+i}.png"))
-        
-        for j in range(4):
-            im = Image.fromarray((nms[..., j] * 255).astype(np.uint8))
-            im.save(os.path.join(nms_output_dir, str(j), f"C{class_label}_{k+i}.png"))
+    if opts.latent:
+        for i, raw in enumerate(images):
+            class_label = class_labels[i].item()
+            
+            im123 = Image.fromarray((raw * 255).astype(np.uint8))
+            im123.save(os.path.join(raw_output_dir, "123", f"C{class_label}_{k+i}.png"))
+            
+            for j in range(3):  # no background for raw output of latent model
+                im = Image.fromarray((raw[..., j] * 255).astype(np.uint8))
+                im.save(os.path.join(raw_output_dir, str(j+1), f"C{class_label}_{k+i}.png"))
+            
+            closed = closing(raw, kernel_size=5)
+            binary = binarize(closed, threshold=0.5)
+            
+            im123 = Image.fromarray((binary * 255).astype(np.uint8))
+            im123.save(os.path.join(binary_output_dir, "123", f"C{class_label}_{k+i}.png"))
+            
+            for j in range(3):
+                im = Image.fromarray((binary[..., j] * 255).astype(np.uint8))
+                im.save(os.path.join(binary_output_dir, str(j+1), f"C{class_label}_{k+i}.png"))
+    else:
+        for i, raw in enumerate(images):
+            class_label = class_labels[i].item()
+            
+            im123 = Image.fromarray((raw[..., 1:] * 255).astype(np.uint8))
+            im123.save(os.path.join(raw_output_dir, "123", f"C{class_label}_{k+i}.png"))
+            
+            for j in range(4):
+                im = Image.fromarray((raw[..., j] * 255).astype(np.uint8))
+                im.save(os.path.join(raw_output_dir, str(j), f"C{class_label}_{k+i}.png"))
+            
+            binary = binarize(raw)
+            im123 = Image.fromarray((binary[..., 1:] * 255).astype(np.uint8))
+            im123.save(os.path.join(binary_output_dir, "123", f"C{class_label}_{k+i}.png"))
+            
+            for j in range(4):
+                im = Image.fromarray((binary[..., j] * 255).astype(np.uint8))
+                im.save(os.path.join(binary_output_dir, str(j), f"C{class_label}_{k+i}.png"))
